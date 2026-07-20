@@ -1,0 +1,48 @@
+name: OneblockPlugin
+version: 0.1.0
+description: The plugin used in the oneblock server of JazhdoMC.
+author: jazhdo
+main: mc.jazhdo.OneblockPlugin
+
+depend: []
+softdepend: []
+
+commands:
+  oneblock:
+    description: Main Oneblock command (also the help command)
+    usage: /oneblock <subcommand>
+    aliases: [ob, 1b]
+
+permissions:
+  oneblock.gamemode:
+    description: Toggle the gamemode of players with oneblock.gamemode or reset gamemodes of everybody else
+    default: false
+  oneblock.guide:
+    description: Guide for how to play oneblock
+    default: true
+  oneblock.help:
+    description: The help menu for the commands
+    default: true
+  oneblock.home:
+    description: The ability to set and to teleport to a player's home
+    default: true
+  oneblock.mod:
+    description: Useful tools for moderation.
+    default: false
+  oneblock.perm:
+    description: The menu for managing oneblock island permissions
+    default: true
+  oneblock.phase:
+    description: Check current phase and select one after completing them all
+    default: true
+  oneblock.reset:
+    description: Reset a oneblock (their own)
+    default: true
+  oneblock.visitor:
+    description: Set the home for where visitors teleport to or visit someone's island
+    default: true
+  oneblock.tp-request:
+    description: Use the tpa/tpr system
+    default: true
+  oneblock.trust:
+    description: Manage their own island's trusted players

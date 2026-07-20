@@ -1,0 +1,9 @@
+# MacOS Junk
+*/.DS_Store
+*/._.DS_Store
+._.DS_Store
+.DS_Store
+
+# Do not include while committing
+target/
+target/*

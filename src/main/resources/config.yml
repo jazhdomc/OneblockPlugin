@@ -1,0 +1,533 @@
+# This is the config file for OneblockPlugin
+
+# WARNING: DO NOT MEDDLE WITH THE FIELD "islands" BECAUSE THAT WILL BREAK THE ONEBLOCKS
+# WARNING: DO NOT DELETE ANY FIELDS OR THINGS WON'T WORK
+
+# The distance between each island (when subtracted)
+island-spacing: 1000
+
+# The index of the next oneblock (Changing this without knowing how it works will probably break the selection system)
+next-island-index: 0
+
+# The message displayed when players teleport to their oneblock home
+oneblock-home-msg: Teleporting you to your oneblock home...
+
+# The message displayed when teleporting to someone's oneblock (%p is the playername who's oneblock the teleportation is to)
+oneblock-visit-msg: Teleporting to %p's oneblock...
+
+# Oneblock reset warning displayed when doing reset without confirm
+oneblock-reset-warning: "Warning: Resetting your island is permenant. Do \"/oneblock reset confirm\" to confirm."
+
+# The message shown when "/oneblock phasecount" is done (%p is the phase and %c is the blockcount)
+phasecount-msg: "Current Phase: %p \nBlock Count: %c"
+
+# Playerlist (using the command /oneblock list) header
+oneblock-list-header: === Oneblock Player List ===
+
+# Player info (using the command /oneblock user <player>) header (%p for playername)
+oneblock-user-header: === Oneblock Player %p Info ===
+
+# Trusted list header
+trusted-list-header: === Trusted List ===
+
+# Default yaw and pitch values for player home
+default-home-yaw: 0
+default-home-pitch: 0
+
+# Default yaw and pitch values for visitor spawn
+default-spawn-yaw: 0
+default-spawn-pitch: 0
+
+# The world that the oneblocks should be in
+oneblock-world: world
+
+# The y-level of the oneblock
+oneblock-y: 63
+
+# Starter blocks (to prevent impossible situations) (same format as phase blocks but without chests)
+starter:
+  - GRASS:0
+  - DIRT:0
+  - GRASS:0
+  - DIRT:0
+  - LOG:0
+  - LOG:0
+  - LOG:0
+  - LOG:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+  - STONE:0
+
+# The prefix to use for sending messages to players
+msg-prefix: "[OneblockPlugin] "
+
+# Guide shown when a player does /oneblock guide
+guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob new\" to get started.\nUse the command: \"/ob phase\" to check your current phase and/or switch to a phase after completing them all.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
+
+# Phases (max 28 for the phase selection)
+phases:
+  - plains
+  - underground
+  - winter
+  - badlands
+  - nether
+  - monument
+  - stronghold
+  - supplies
+  - end
+
+# Phase descriptions
+phase-descriptions:
+  - A grassy starter phase
+  - All the things you find underground on your first mining trip
+  - A snowy landscape
+  - Some horrible land, but with many colors
+  - A lava-filled wasteland
+  - A hard to beat fortress in the middle of the ocean
+  - Many supplies to get you ready to beat something...
+  - After such a long time, finally... THE FINALE!
+
+# Phase menu
+phase-menu:
+  # The icons to represent phases in the phase selector ui (will silently fail if cooresponding phase not found)
+  icons:
+    - GRASS
+    - STONE
+    - SNOW_BLOCK
+    - HARD_CLAY
+    - NETHERRACK
+    - PRISMARINE
+    - PURPUR_BLOCK
+    - HAY_BLOCK
+    - ENDER_STONE
+  
+  # The block to be used as the border (format: BLOCK:METADATA)
+  border: STAINED_GLASS_PANE:15
+
+  # The display for phases not yet locked (format: BLOCK:METADATA)
+  locked: STAINED_GLASS_PANE:8
+
+  # Phases GUI title
+  title: Phases Selector GUI
+
+# The number of blocks in each phase
+phase-length: [300, 200, 150, 250, 350, 100, 150, 550, 400]
+
+# Blocks to be randomized for phases
+# Format:
+# 
+#   Normal Blocks:
+#   MATERIAL_NAME:DATA_VALUE
+# 
+#   Chests:
+#   CHEST,ITEM1:DATA_VALUE:COUNT,ITEM2:DATA_VALUE:COUNT,ITEM3:DATA_VALUE:COUNT,ITEM4:DATA_VAL...
+# 
+phase-blocks:
+  plains:
+    - GRASS:0
+    - GRASS:0
+    - GRASS:0
+    - DIRT:0
+    - DIRT:0
+    - STONE:0
+    - GRAVEL:0
+    - SAND:0
+    - CLAY:0
+    - LONG_GRASS:1
+    - DOUBLE_PLANT:2
+    - YELLOW_FLOWER:0
+    - RED_ROSE:0
+    - LOG:0
+    - LEAVES:0
+    - SAPLING:0
+    - BROWN_MUSHROOM:0
+    - RED_MUSHROOM:0
+    - CHEST,WHEAT_SEEDS:0:8,BONE_MEAL:15:4,APPLE:0:2
+    - CHEST,OAK_WOOD:0:16,STICK:0:8,STRING:0:4
+    - CHEST,WHEAT:0:8,CARROT:0:4,POTATO:0:4
+    - CHEST,LEATHER:0:4,FEATHER:0:8,EGG:0:4
+
+  underground:
+    - STONE:0
+    - STONE:0
+    - STONE:0
+    - GRAVEL:0
+    - DIRT:0
+    - COAL_ORE:0
+    - COAL_ORE:0
+    - IRON_ORE:0
+    - IRON_ORE:0
+    - GOLD_ORE:0
+    - REDSTONE_ORE:0
+    - LAPIS_ORE:0
+    - DIAMOND_ORE:0
+    - OBSIDIAN:0
+    - MOSSY_COBBLESTONE:0
+    - COBBLESTONE:0
+    - CHEST,TORCH:0:16,IRON_INGOT:0:4,BREAD:0:3
+    - CHEST,COAL:0:16,IRON_PICKAXE:0:1,IRON_SHOVEL:0:1
+    - CHEST,REDSTONE:0:16,LAPIS:0:8,GLOWSTONE_DUST:0:4
+    - CHEST,DIAMOND:0:2,IRON_INGOT:0:8,GOLD_INGOT:0:4
+
+  winter:
+    - SNOW_BLOCK:0
+    - SNOW_BLOCK:0
+    - SNOW_BLOCK:0
+    - ICE:0
+    - ICE:0
+    - PACKED_ICE:0
+    - DIRT:0
+    - STONE:0
+    - GRAVEL:0
+    - LOG:0
+    - LEAVES:0
+    - SAPLING:0
+    - LONG_GRASS:1
+    - BROWN_MUSHROOM:0
+    - RED_MUSHROOM:0
+    - CHEST,SNOW_BALL:0:8,LEATHER:0:4,COOKED_BEEF:0:3
+    - CHEST,PACKED_ICE:0:8,SNOW_BLOCK:0:8,ICE:0:4
+    - CHEST,IRON_SWORD:0:1,IRON_HELMET:0:1,COOKED_MUTTON:0:4
+    - CHEST,SUGAR:0:8,COOKIE:0:16,CAKE:0:1
+
+  badlands:
+    - HARD_CLAY:0
+    - HARD_CLAY:0
+    - STAINED_CLAY:0
+    - STAINED_CLAY:1
+    - STAINED_CLAY:2
+    - STAINED_CLAY:3
+    - STAINED_CLAY:4
+    - STAINED_CLAY:5
+    - STAINED_CLAY:6
+    - STAINED_CLAY:7
+    - STAINED_CLAY:8
+    - STAINED_CLAY:9
+    - STAINED_CLAY:10
+    - STAINED_CLAY:11
+    - STAINED_CLAY:12
+    - STAINED_CLAY:13
+    - STAINED_CLAY:14
+    - STAINED_CLAY:15
+    - RED_SAND:0
+    - RED_SAND:0
+    - SAND:0
+    - GRAVEL:0
+    - DEAD_BUSH:0
+    - CACTUS:0
+    - STONE:0
+    - COAL_ORE:0
+    - GOLD_ORE:0
+    - GOLD_ORE:0
+    - IRON_ORE:0
+    - CHEST,GOLD_INGOT:0:4,GOLD_NUGGET:0:16,CACTUS:0:8
+    - CHEST,STAINED_CLAY:1:8,STAINED_CLAY:4:8,STAINED_CLAY:12:8
+    - CHEST,GOLD_SWORD:0:1,GOLD_PICKAXE:0:1,GOLD_INGOT:0:4
+    - CHEST,IRON_INGOT:0:8,COAL:0:16,SAND:0:16
+
+  nether:
+    - NETHERRACK:0
+    - NETHERRACK:0
+    - NETHERRACK:0
+    - SOUL_SAND:0
+    - SOUL_SAND:0
+    - NETHER_BRICK:0
+    - NETHER_FENCE:0
+    - NETHER_WART_BLOCK:0
+    - GLOWSTONE:0
+    - GLOWSTONE:0
+    - MAGMA:0
+    - QUARTZ_ORE:0
+    - QUARTZ_BLOCK:0
+    - BONE_BLOCK:0
+    - CHEST,NETHER_WART:0:8,BLAZE_ROD:0:2,GOLD_INGOT:0:4,FIRE_CHARGE:0:4
+    - CHEST,MAGMA_CREAM:0:4,BLAZE_POWDER:0:8,GHAST_TEAR:0:1
+    - CHEST,IRON_BOOTS:0:1,IRON_CHESTPLATE:0:1,GOLDEN_APPLE:0:1
+    - CHEST,QUARTZ:0:16,GLOWSTONE_DUST:0:8,NETHER_WART:0:4
+
+  ocean:
+    - PRISMARINE:0
+    - PRISMARINE:0
+    - PRISMARINE:1
+    - SEA_LANTERN:0
+    - SPONGE:0
+    - SAND:0
+    - SAND:0
+    - GRAVEL:0
+    - CLAY:0
+    - DIRT:0
+    - STONE:0
+    - CHEST,INK_SACK:0:8,RAW_FISH:0:4,PRISMARINE_SHARD:0:8,PRISMARINE_CRYSTALS:0:4
+    - CHEST,COOKED_FISH:0:8,LILY_PAD:0:4,SPONGE:0:2
+    - CHEST,PRISMARINE_SHARD:0:16,SEA_LANTERN:0:2,CLAY_BALL:0:8
+    - CHEST,RAW_FISH:3:4,RAW_FISH:1:4,SADDLE:0:1
+
+  stronghold:
+    - SMOOTH_BRICK:0
+    - SMOOTH_BRICK:0
+    - SMOOTH_BRICK:0
+    - MOSSY_COBBLESTONE:0
+    - COBBLESTONE:0
+    - IRON_BARS:0
+    - WOODEN_DOOR:0
+    - IRON_DOOR:0
+    - IRON_TRAPDOOR:0
+    - BOOKSHELF:0
+    - TORCH:0
+    - END_PORTAL_FRAME:0
+    - STONE_BUTTON:0
+    - STONE_PLATE:0
+    - CHEST,ENDER_PEARL:0:4,IRON_INGOT:0:8,BREAD:0:4,GOLDEN_APPLE:0:1
+    - CHEST,IRON_SWORD:0:1,IRON_CHESTPLATE:0:1,IRON_LEGGINGS:0:1
+    - CHEST,BOOK:0:4,PAPER:0:16,ENCHANTED_BOOK:0:1
+    - CHEST,DIAMOND:0:3,EMERALD:0:4,OBSIDIAN:0:8
+
+  supplies:
+    - WOOD:0
+    - WOOD:0
+    - COBBLESTONE:0
+    - COBBLESTONE:0
+    - BRICK:0
+    - WOOL:0
+    - TORCH:0
+    - HAY_BLOCK:0
+    - CRAFTING_TABLE:0
+    - FURNACE:0
+    - IRON_BLOCK:0
+    - GOLD_BLOCK:0
+    - DIAMOND_BLOCK:0
+    - CHEST,IRON_INGOT:0:16,GOLD_INGOT:0:8,DIAMOND:0:4,EMERALD:0:2,COOKED_BEEF:0:8
+    - CHEST,IRON_PICKAXE:0:1,IRON_AXE:0:1,IRON_SWORD:0:1,TORCH:0:16
+    - CHEST,BREAD:0:16,COOKED_CHICKEN:0:8,COOKED_PORKCHOP:0:8
+    - CHEST,SADDLE:0:1,NAME_TAG:0:1,LEAD:0:2,IRON_INGOT:0:8
+
+  end:
+    - END_STONE:0
+    - END_STONE:0
+    - OBSIDIAN:0
+    - PURPUR_BLOCK:0
+    - PURPUR_BLOCK:0
+    - PURPUR_PILLAR:0
+    - PURPUR_STAIRS:0
+    - PURPUR_SLAB:0
+    - END_BRICKS:0
+    - END_ROD:0
+    - CHORUS_PLANT:0
+    - CHORUS_FLOWER:0
+    - DRAGON_EGG:0
+    - CHEST,ENDER_PEARL:0:8,SHULKER_SHELL:0:2,CHORUS_FRUIT:0:16,ELYTRA:0:1
+    - CHEST,END_CRYSTAL:0:1,END_ROD:0:8,END_STONE:0:16
+    - CHEST,DIAMOND_SWORD:0:1,DIAMOND_CHESTPLATE:0:1,GOLDEN_APPLE:1:1
+    - CHEST,SHULKER_SHELL:0:4,DRAGON_BREATH:0:4,SPECTRAL_ARROW:0:16
+
+# Help message customization
+help:
+  # Header of the help menu
+  header: === Oneblock Help ===
+
+  # Color of the header in ChatColor. format
+  header-color: GOLD
+
+  # Commands
+  cmds:
+    - guide
+    - help
+    - home
+    - perm <visitor|trusted>
+    - phase
+    - phasecheck
+    - reset
+    - resethome
+    - sethome [<x> <y> <z>[ <yaw> <pitch>]]
+    - setspawn [<x> <y> <z>[ <yaw> <pitch>]]
+    - spawn
+    - tpa <player>
+    - tpr <player>
+    - trust <player>|all
+    - trustlist
+    - untrust <player>|all
+    - visit <player>
+  
+  # Color of the commands in ChatColor. format
+  cmd-color: YELLOW
+
+  # Messages corresponding to the commands
+  msgs:
+    - Shows a guide for how to play oneblock
+    - Shows this help message
+    - Teleports you to your oneblock or creates one if you don't have one
+    - Menu to edit permissions for trusted players and visitors
+    - Opens a phase selection interface
+    - Tells you your phase and block count
+    - Resets your Oneblock island
+    - Resets your Oneblock home to the default location (above the oneblock)
+    - Sets your oneblock home
+    - Sets your visitor spawn
+    - Teleports you to your visitor spawn (same as "/oneblock visit <your_playername>")
+    - Accepts a request to tp from a player
+    - Requests to tp to a player
+    - Trusts a player or everyone online
+    - Lists everyone who's trusted
+    - Untrusts a player or everyone
+    - Visit a player's island
+
+  # Color of the messages in ChatColor. format
+  msg-color: GRAY
+
+# Mod help message customization
+mod-help:
+  # Header of the mod help menu
+  header: === Oneblock Mod Help ===
+
+  # Color of the header in ChatColor. format
+  header-color: GOLD
+
+  # Commands
+  cmds:
+    - gamemode [player]
+    - list
+    - reload
+    - tp <player|x,y>
+    - user <player>
+  
+  # Color of the commands in ChatColor. format
+  cmd-color: YELLOW
+
+  # Messages corresponding to the commands
+  msgs:
+    - Changes between spectator gamemode and survival gamemode
+    - Lists all the islands
+    - Reloads the config (Has potential to reset current write operations)
+    - Teleports to a player or a island
+    - Shows user info
+
+  # Color of the messages in ChatColor. format
+  msg-color: GRAY
+
+# Permission managing menu
+perm-menu:
+  # The titles of the user interface
+  title:
+    # Visitor permissions title
+    visitor: Visitor Permission Manager GUI
+
+    # Trusted permissions title
+    trusted: Trusted Permission Manager GUI
+
+  # Names to represent each permission (all "-" removed and then capitalized) (DO NOT EVER CHANGE OR IT WILL NOT WORK)
+  names:
+    - anvil-use
+    - bed-use
+    - block-break
+    - block-interact
+    - block-place
+    - breeding
+    - brewing-use
+    - bucket-empty
+    - bucket-fill
+    - chest-use
+    - crafting-use
+    - crop-trample
+    - enchant-use
+    - furnace-use
+    - lighter-use
+    - hurt-animals
+    - hurt-hostile
+    - item-drop
+    - item-pickup
+    - mob-damage
+    - pearl-use
+    - player-move
+    - portal-use
+    - pvp
+    - shulker-use
+    - taming
+    - vehicle-use
+
+  # Descriptions to be shown on what each permission does
+  descriptions:
+    - Use a anvil
+    - Use a bed
+    - Break any blocks
+    - Interact with (Right click) any blocks
+    - Place any blocks
+    - Breed animals
+    - Use a brewing stand
+    - Empty a bucket
+    - Fill a bucket
+    - Use a chest
+    - Use a crafting table
+    - Trample crops (A subsection of block-interact)
+    - Use a enchantment table
+    - Use a furnace
+    - Use a flint and steel
+    - Attack a animal
+    - Attack a hostile mob
+    - Drop items
+    - Pick items up
+    - Be damaged by mobs
+    - Use a ender pearl
+    - Move away from the position they are at
+    - Use a nether portal
+    - Player vs player attack
+    - Use a shulker box
+    - Tame a animal
+    - Ride anything
+
+  # Blocks to represent each permission
+  blocks:
+    - anvil
+    - bed
+    - stone_pickaxe
+    - item_frame
+    - grass
+    - wheat
+    - brewing_stand
+    - bucket
+    - water_bucket
+    - chest
+    - workbench
+    - seeds
+    - enchantment_table
+    - furnace
+    - flint_and_steel
+    - shears
+    - diamond_sword
+    - dropper
+    - hopper
+    - sulphur
+    - ender_pearl
+    - leather_boots
+    - obsidian
+    - diamond_axe
+    - shulker_shell
+    - bone
+    - boat
+
+# Data for each island
+islands:
+  jazhdo:
+    # x: 0
+    # z: 0
+    # home:
+    #   x: 0
+    #   y: 64
+    #   z: 0
+    #   yaw: 0
+    #   pitch: 0
+    # spawn:
+    #   x: 0
+    #   y: 64
+    #   z: 0
+    #   yaw: 0
+    #   pitch: 0
+    # blocks: 0
+    # phase: plains
+    # trusted: [fdsak, bobbyreichert]
+    # trusted-perms: []
+    # visitor-perms: []
