@@ -436,7 +436,9 @@ public class OneblockCommands implements CommandExecutor {
     }
 
     public void sendInfo(Player player, String msg) {
-        sendMessage(player, ChatColor.YELLOW + plugin.getConfig().getString("msg-prefix") + ChatColor.WHITE + msg);
+        // Send each line separately
+        String[] msgParts = msg.split("\n");
+        for (String part : msgParts) sendMessage(player, ChatColor.YELLOW + plugin.getConfig().getString("msg-prefix") + ChatColor.WHITE + part);
     }
     
     private void sendMessage(Player player, String msg) {
@@ -530,15 +532,12 @@ public class OneblockCommands implements CommandExecutor {
     private void trust(String[] args, Player player, String base) {
         // Make sure trust perm exists
         if (checkPerms(player, "trust") && hasIsland(player)) {
-            // Trust or untrust
-            Boolean trust = args[0].toLowerCase().equals("trust");
-
             // Make sure the player argument exists
             if (args.length < 2) sendMessage(player, "\"player\" argument required");
             else {
-                List<String> trusted = config.getStringList(base.concat("trusted"));
-
                 // If to change all the users or just one
+                List<String> trusted = config.getStringList(base.concat("trusted"));
+                Boolean trust = args[0].toLowerCase().equals("trust");
                 if (args[1].toLowerCase().equals("all")) {
                     if (trust) trusted.add("*");
                     else trusted = new ArrayList<>();
@@ -554,7 +553,7 @@ public class OneblockCommands implements CommandExecutor {
                 plugin.saveConfig();
 
                 // Send completion msg
-                sendInfo(player, "Player ".concat(args[1]).concat(" has been added to your trusted list."));
+                sendInfo(player, "Player " + args[1] + " has been " + (trust ? "added to" : "removed from") + " your trusted list.");
             }
         }
     }
@@ -562,21 +561,24 @@ public class OneblockCommands implements CommandExecutor {
     private void visit(Player player, String target) {
         // Make sure perms exist
         if (checkPerms(player, "visitor")) {
-            // Get base string for simpler use
-            String base = "islands.".concat(target.toLowerCase()).concat(".spawn.");
+            // Make sure island exists
+            if (config.contains("islands." + target.toLowerCase())) {
+                // Get base string for simpler use
+                String base = "islands.".concat(target.toLowerCase()).concat(".spawn.");
 
-            // Tell player about the teleportation
-            sendInfo(player, config.getString("oneblock-visit-msg").replace("%p", target));
+                // Tell player about the teleportation
+                sendInfo(player, config.getString("oneblock-visit-msg").replace("%p", target));
 
-            // Teleport player
-            player.teleport(new Location(
-                Bukkit.getWorld(config.getString("oneblock-world")),
-                config.getDouble(base.concat("x")),
-                config.getDouble(base.concat("y")),
-                config.getDouble(base.concat("z")),
-                (float) config.getDouble(base.concat("yaw")),
-                (float) config.getDouble(base.concat("pitch")))
-            );
+                // Teleport player
+                player.teleport(new Location(
+                    Bukkit.getWorld(config.getString("oneblock-world")),
+                    config.getDouble(base.concat("x")),
+                    config.getDouble(base.concat("y")),
+                    config.getDouble(base.concat("z")),
+                    (float) config.getDouble(base.concat("yaw")),
+                    (float) config.getDouble(base.concat("pitch")))
+                );
+            } else sendInfo(player, "Island not found.");
         }
     }
 

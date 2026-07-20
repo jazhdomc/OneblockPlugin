@@ -140,15 +140,21 @@ public class OneblockListener implements Listener {
         int blockCount = config.getInt(base.concat(".blocks")) + 1;
         config.set(base.concat(".blocks"), blockCount);
 
-        // Replace the broken block (use starter blocks if starter in section)
-        List<String> starter = config.getStringList("starter");
-        if (starter.size() > blockCount) {
-            String[] parts = starter.get(blockCount).split(":");
-            Material material = Material.getMaterial(parts[0]);
-            if (material == null) plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid."));
-            broken.setType(material);
-            if (parts.length > 1) broken.setData((parts.length > 1) ? Byte.parseByte(parts[1]) : 0);
-        } else replaceBlock(broken, player);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            // Replace the broken block (use starter blocks if starter in section)
+            List<String> starter = config.getStringList("starter");
+            if (starter.size() > blockCount) {
+                String[] parts = starter.get(blockCount).split(":");
+                Material material = Material.getMaterial(parts[0]);
+                if (material == null) {
+                    plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                    material = Material.GRASS;
+                }
+                broken.setType(material);
+                if (parts.length > 1) broken.setData(Byte.parseByte(parts[1]));
+                else broken.setData(Byte.parseByte("0"));
+            } else replaceBlock(broken, player);
+        }, 1L);
 
         // Get total blocks needed to be out of the phase updates
         List<Integer> phaseLength = config.getIntegerList("phase-length");
@@ -169,7 +175,7 @@ public class OneblockListener implements Listener {
                 }
                 total += phaseLength.get(i);
             }
-            if (!config.getString(base.concat(".phase")).equals(phase)) config.set(base.concat(".phase"), phase);
+            if (!phase.equals(config.getString(base.concat(".phase")))) config.set(base.concat(".phase"), phase);
         }
 
         // Save changes
@@ -179,7 +185,7 @@ public class OneblockListener implements Listener {
     // @SuppressWarnings("deprecation")
     public void replaceBlock(Block replace, Player player) {
         // Get a random block
-        List<String> blocks = config.getStringList("phase-blocks.".concat(plugin.getConfig().getString("islands.".concat(player.getName().toLowerCase()).concat(".phase"))));
+        List<String> blocks = config.getStringList("phase-blocks." + config.getString("islands." + player.getName().toLowerCase() + ".phase"));
         String block = blocks.get((int) (Math.random() * blocks.size()));
 
         // If a chest is to be made
@@ -218,7 +224,10 @@ public class OneblockListener implements Listener {
             Material material = Material.getMaterial(parts[0]);
 
             // In case material is incorrect
-            if (material == null) plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid."));
+            if (material == null) {
+                plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                material = Material.GRASS;
+            }
 
             // Replace block
             replace.setType(material);
