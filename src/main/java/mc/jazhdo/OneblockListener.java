@@ -133,6 +133,9 @@ public class OneblockListener implements Listener {
     @EventHandler
     // @SuppressWarnings("deprecation")
     public void onBlockBreak(BlockBreakEvent event) {
+        // Cancel the block early to prevent too much lag
+        event.setCancelled(true);
+        
         // Verify that the block broken is a oneblock
         Block broken = event.getBlock();
         Location loc = broken.getLocation();
@@ -149,7 +152,6 @@ public class OneblockListener implements Listener {
         World brokenWorld = broken.getWorld();
         Location dropLocation = loc.clone().add(0.5, 1.2, 0.5);
         ItemStack tool = player.getInventory().getItemInMainHand();
-        event.setCancelled(true);
         for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
         int xp = event.getExpToDrop();
         if (xp > 0) brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(xp);

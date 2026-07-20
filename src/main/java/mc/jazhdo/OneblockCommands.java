@@ -261,11 +261,11 @@ public class OneblockCommands implements CommandExecutor {
                                 phaseOn++;
                             } else phaseUI.setItem(i, border);
                         }
-                        for (int l = 0; l < 1; l++, i++) phaseUI.setItem(i, border);
+                        // for (int l = 0; l < 2; l++, i++) phaseUI.setItem(i, border);
                     }
 
                     // Set last row
-                    for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
+                    // for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
                     
                     // Show player the phase selector
                     player.openInventory(phaseUI);
