@@ -147,7 +147,7 @@ public class OneblockListener implements Listener {
 
         // Drop normal drops
         World brokenWorld = broken.getWorld();
-        Location dropLocation = loc.clone().add(0.5, 0.5, 0.5);
+        Location dropLocation = loc.clone().add(0.5, 1.2, 0.5);
         ItemStack tool = player.getInventory().getItemInMainHand();
         event.setCancelled(true);
         for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
@@ -164,7 +164,7 @@ public class OneblockListener implements Listener {
         } 
 
         // Statistics
-        player.incrementStatistic(Statistic.MINE_BLOCK);
+        player.incrementStatistic(Statistic.MINE_BLOCK, 1);
 
         // Exhaustion from mining
         player.setExhaustion(player.getExhaustion() + 0.005f);
