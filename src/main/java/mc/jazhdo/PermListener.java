@@ -1,5 +1,6 @@
 package mc.jazhdo;
 
+import java.util.List;
 import java.util.Set;
 
 import org.bukkit.Location;
@@ -46,17 +47,15 @@ public class PermListener implements Listener {
         FileConfiguration config = plugin.getConfig();
         Set<String> islands = config.getConfigurationSection("islands").getKeys(false);
         Location playerLoc = player.getLocation();
-        Double playerX = playerLoc.getX();
-        Double playerZ = playerLoc.getZ();
-        Double islandSpacing = config.getDouble("island-spacing");
-        Double islandSpacingHalf = islandSpacing/2;
+        Double playerX = playerLoc.getX(), playerZ = playerLoc.getZ(), islandSpacing = config.getDouble("island-spacing"), islandSpacingHalf = islandSpacing/2;
         for (String island : islands) {
             String base = "islands.".concat(island).concat(".");
-            Double islandX = config.getDouble(base.concat("x")) * islandSpacing;
-            Double islandZ = config.getDouble(base.concat("z")) * islandSpacing;
+            Double islandX = config.getDouble(base.concat("x")) * islandSpacing, islandZ = config.getDouble(base.concat("z")) * islandSpacing;
             if (playerX > islandX - islandSpacingHalf && playerZ > islandZ - islandSpacingHalf && playerX <= islandX + islandSpacingHalf && playerZ <= islandZ + islandSpacingHalf) {
-                Boolean trusted = config.getStringList(base.concat("trusted")).contains(player.getName().toLowerCase());
-                if (!trusted && !config.getStringList(base.concat("visitor-perms")).contains(perm) && trusted && !config.getStringList(base.concat("trusted-perms")).contains(perm)) cancelEvent(event);
+                // Check whether or not player is trusted or the trusted all selector is present
+                List<String> trustedList = config.getStringList(base.concat("trusted"));
+                Boolean trusted = trustedList.contains(player.getName().toLowerCase()) || trustedList.contains("*");
+                if ((!trusted && !config.getStringList(base.concat("visitor-perms")).contains(perm)) || (trusted && !config.getStringList(base.concat("trusted-perms")).contains(perm))) cancelEvent(event);
                 return;
             }
         }

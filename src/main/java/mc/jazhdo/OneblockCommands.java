@@ -526,16 +526,12 @@ public class OneblockCommands implements CommandExecutor {
 
                 // If to change all the users or just one
                 if (args[1].toLowerCase().equals("all")) {
-                    if (trust) {
-                        List<Player> playerlist = Bukkit.getWorld(config.getString("oneblock-world")).getPlayers();
-                        for (Player trustPlayer : playerlist) {
-                            String name = trustPlayer.getName().toLowerCase();
-                            if (!trusted.contains(name)) trusted.add(name);
-                        }
-                    } else trusted = new ArrayList<>();
-                } else
+                    if (trust) trusted.add("*");
+                    else trusted = new ArrayList<>();
+                } else {
                     if (!trusted.contains(args[1].toLowerCase()) && trust) trusted.add(args[1].toLowerCase());
                     else if (trusted.contains(args[1].toLowerCase()) && !trust) trusted.remove(args[1].toLowerCase());
+                }
                 
                 // Set changed list
                 config.set(base.concat("trusted"), trusted);
