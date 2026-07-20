@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -75,7 +74,7 @@ public class OneblockListener implements Listener {
 
         // Find which GUI this is
         String inventoryTitle = event.getInventory().getTitle();
-        if (inventoryTitle.equals(config.getString("phases-menu.title"))){
+        if (inventoryTitle.equals(config.getString("phase-menu.title"))){
             // Cancel all clicks so no items leave the inventory
             event.setCancelled(true);
 
@@ -133,80 +132,78 @@ public class OneblockListener implements Listener {
     @EventHandler
     // @SuppressWarnings("deprecation")
     public void onBlockBreak(BlockBreakEvent event) {
-        // Cancel the block early to prevent too much lag
-        event.setCancelled(true);
-        
         // Verify that the block broken is a oneblock
         Block broken = event.getBlock();
         Location loc = broken.getLocation();
         int distance = config.getInt("island-spacing");
-        if (!loc.getWorld().equals(Bukkit.getWorld(config.getString("oneblock-world"))) || loc.getBlockX() % distance != 0 || loc.getBlockY() != config.getInt("oneblock-y") || loc.getBlockZ() % distance != 0) return;
+        if (loc.getWorld().getName().equals(config.getString("oneblock-world")) && loc.getBlockX() % distance == 0 && loc.getBlockZ() % distance == 0 && loc.getBlockY() == config.getInt("oneblock-y")) {
+            // Cancel the block early to prevent too much lag
+            event.setCancelled(true);
 
-        // Update block count
-        Player player = event.getPlayer();
-        String base = "islands.".concat(player.getName().toLowerCase());
-        int blockCount = config.getInt(base.concat(".blocks")) + 1;
-        config.set(base.concat(".blocks"), blockCount);
+            // Update block count
+            Player player = event.getPlayer();
+            String base = "islands.".concat(player.getName().toLowerCase());
+            int blockCount = config.getInt(base.concat(".blocks")) + 1;
+            config.set(base.concat(".blocks"), blockCount);
 
-        // Drop normal drops
-        World brokenWorld = broken.getWorld();
-        Location dropLocation = loc.clone().add(0.5, 1.2, 0.5);
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
-        int xp = event.getExpToDrop();
-        if (xp > 0) brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(xp);
-        brokenWorld.playEffect(dropLocation, Effect.STEP_SOUND, broken.getType());
+            // Drop normal drops
+            World brokenWorld = broken.getWorld();
+            Location dropLocation = loc.clone().add(0.5, 1.2, 0.5);
+            ItemStack tool = player.getInventory().getItemInMainHand();
+            for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
+            int xp = event.getExpToDrop();
+            if (xp > 0) brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(xp);
 
-        // Simulate tool use
-        ItemMeta meta = tool.getItemMeta();
-        if (tool.getType().getMaxDurability() > 0 && meta != null && !meta.isUnbreakable()) {
-            short newDurability = (short) ((short) tool.getDurability() + 1);
-            if (newDurability >= tool.getType().getMaxDurability()) {
-                player.getInventory().setItemInMainHand(null);
-                player.getWorld().playSound(dropLocation, Sound.ENTITY_ITEM_BREAK, 1f, 1f);
-            } else tool.setDurability(newDurability);
-        } 
+            // Simulate tool use
+            ItemMeta meta = tool.getItemMeta();
+            if (tool.getType().getMaxDurability() > 0 && meta != null && !meta.isUnbreakable()) {
+                short newDurability = (short) ((short) tool.getDurability() + 1);
+                if (newDurability >= tool.getType().getMaxDurability()) {
+                    player.getInventory().setItemInMainHand(null);
+                    player.getWorld().playSound(dropLocation, Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+                } else tool.setDurability(newDurability);
+            } 
 
-        // Statistics
-        player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
+            // Statistics
+            player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
 
-        // Exhaustion from mining
-        player.setExhaustion(player.getExhaustion() + 0.005f);
+            // Exhaustion from mining
+            player.setExhaustion(player.getExhaustion() + 0.005f);
 
-        // Replace the broken block (use starter blocks if starter in section)
-        List<String> starter = config.getStringList("starter");
-        if (starter.size() > blockCount) {
-            String[] parts = starter.get(blockCount).split(":");
-            Material material = Material.getMaterial(parts[0]);
-            if (material == null) {
-                plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
-                material = Material.GRASS;
-            }
-            broken.setType(material);
-            if (parts.length > 1) broken.setData(Byte.parseByte(parts[1]));
-            else broken.setData(Byte.parseByte("0"));
-        } else replaceBlock(broken, player);
-
-        // Get total blocks needed to be out of the phase updates
-        List<Integer> phaseLength = config.getIntegerList("phase-length");
-        int total = 0;
-        for (int i = 0; i < phaseLength.size(); i++) total += phaseLength.get(i);
-
-        // Only update phase if phases have not yet been finished
-        if (blockCount < total) {
-            List<String> phases = config.getStringList("phases");
-            String phase = phases.get(phases.size() - 1);
-
-            // Find correct phase
-            total = 0;
-            for (int i = 0; i < phaseLength.size(); i++) {
-                if (blockCount >= total && blockCount < total + phaseLength.get(i)) {
-                    phase = phases.get(i);
-                    break;
+            // Replace the broken block (use starter blocks if starter in section)
+            List<String> starter = config.getStringList("starter");
+            if (starter.size() > blockCount) {
+                String[] parts = starter.get(blockCount).split(":");
+                Material material = Material.getMaterial(parts[0]);
+                if (material == null) {
+                    plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                    material = Material.GRASS;
                 }
-                total += phaseLength.get(i);
+                broken.setType(material);
+                broken.setData(Byte.parseByte((parts.length > 1) ? parts[1] : "0"));
+            } else replaceBlock(broken, player);
+
+            // Get total blocks needed to be out of the phase updates
+            List<Integer> phaseLength = config.getIntegerList("phase-length");
+            int total = 0;
+            for (int i = 0; i < phaseLength.size(); i++) total += phaseLength.get(i);
+
+            // Only update phase if phases have not yet been finished
+            if (blockCount < total) {
+                List<String> phases = config.getStringList("phases");
+                String phase = phases.get(phases.size() - 1);
+
+                // Find correct phase
+                total = 0;
+                for (int i = 0; i < phaseLength.size(); i++) {
+                    if (blockCount >= total && blockCount < total + phaseLength.get(i)) {
+                        phase = phases.get(i);
+                        break;
+                    }
+                    total += phaseLength.get(i);
+                }
+                if (!phase.equals(config.getString(base.concat(".phase")))) config.set(base.concat(".phase"), phase);
             }
-            if (!phase.equals(config.getString(base.concat(".phase")))) config.set(base.concat(".phase"), phase);
         }
     }
 

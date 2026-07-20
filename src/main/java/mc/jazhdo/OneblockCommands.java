@@ -297,22 +297,12 @@ public class OneblockCommands implements CommandExecutor {
                         config.set(base.concat("yaw"), defaultHomeYaw);
                         config.set(base.concat("pitch"), defaultHomePitch);
 
-                        // Erase blocks async so that they don't lag the server out every time
-                        final Player playerclone = player;
-                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                            // Remove all the blocks except the oneblock and the obsidian below
-                            Location oneBlock = new Location(oneblockWorld, Double.valueOf(oneblock[0]), oneblockY, Double.valueOf(oneblock[1])), protectionBlock = new Location(oneBlock.getWorld(), oneBlock.getX(), oneBlock.getY() - 1, oneBlock.getZ());
-                            int x, y, z;
-                            for (x = start[0]; x <= end[0]; x++)
-                                for (y = start[1]; y <= end[1]; y++)
-                                    for (z = start[2]; z <= end[2]; z++) {
-                                        Location current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z));
-                                        if (!current.equals(oneBlock) && !current.equals(protectionBlock)) current.getBlock().setType(Material.AIR);
-                                    }
-
-                            // Give player a indication of conclusion.
-                            sendInfo(playerclone, "Your Oneblock island has been reset.");
-                        });
+                        // Remove all the blocks except the oneblock and the obsidian below
+                        int x, y, z;
+                        for (x = start[0]; x <= end[0]; x++) for (y = start[1]; y <= end[1]; y++) for (z = start[2]; z <= end[2]; z++) if (x != 0 || z != 0 || (y != oneblockY && y != oneblockY - 1)) oneblockWorld.getBlockAt(x, y, z).setType(Material.AIR);
+                        
+                        // Give player a indication of conclusion.
+                        sendInfo(player, "Your Oneblock island has been reset.");
                     } else sendInfo(player, config.getString("oneblock-reset-warning"));
                 }
             }
