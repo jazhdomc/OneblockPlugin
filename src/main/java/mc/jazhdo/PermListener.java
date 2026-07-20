@@ -1,7 +1,6 @@
 package mc.jazhdo;
 
 import java.util.List;
-import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,10 +43,9 @@ public class PermListener implements Listener {
 
     private void checkPerms(Player player, String perm, Event event) {
         // Find out whose island the player is on
-        Set<String> islands = config.getConfigurationSection("islands").getKeys(false);
         Location playerLoc = player.getLocation();
         Double playerX = playerLoc.getX(), playerZ = playerLoc.getZ(), islandSpacing = config.getDouble("island-spacing"), islandSpacingHalf = islandSpacing/2;
-        for (String island : islands) {
+        for (String island : config.getConfigurationSection("islands").getKeys(false)) {
             String base = "islands.".concat(island).concat(".");
             Double islandX = config.getDouble(base.concat("x")) * islandSpacing, islandZ = config.getDouble(base.concat("z")) * islandSpacing;
             if (playerX > islandX - islandSpacingHalf && playerZ > islandZ - islandSpacingHalf && playerX <= islandX + islandSpacingHalf && playerZ <= islandZ + islandSpacingHalf) {

@@ -24,8 +24,8 @@ public class OneblockPlugin extends JavaPlugin {
         manager.registerEvents(new PermListener(this), this);
         getCommand("oneblock").setExecutor(commands);
         
-        // Save every 30s
-        saver = Bukkit.getScheduler().runTaskTimer(this, this::saveConfig, 0L, 600L);
+        // Save every minute
+        saver = Bukkit.getScheduler().runTaskTimer(this, this::saveConfig, 0L, 1200L);
     }
 
     @Override

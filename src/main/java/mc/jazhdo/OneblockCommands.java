@@ -221,7 +221,7 @@ public class OneblockCommands implements CommandExecutor {
                     // Build the next few rows
                     int phaseOn = 0;
                     List<String> phaseIcons = config.getStringList("phase-menu.icons"), phaseDesc = config.getStringList("phase-descriptions");
-                    for (int j = 0; j < rows; j++) {
+                    for (int j = 0; j < rows - 2; j++) {
                         for (int k = 0; k < 7; k++, i++) {
                             if (phaseOn < phaseIcons.size()) {
                                 // Only show the phase's true icon if the phase isn't locked
@@ -261,11 +261,11 @@ public class OneblockCommands implements CommandExecutor {
                                 phaseOn++;
                             } else phaseUI.setItem(i, border);
                         }
-                        // for (int l = 0; l < 2; l++, i++) phaseUI.setItem(i, border);
+                        for (int l = 0; l < 2; l++, i++) phaseUI.setItem(i, border);
                     }
 
                     // Set last row
-                    // for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
+                    for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
                     
                     // Show player the phase selector
                     player.openInventory(phaseUI);
@@ -289,16 +289,6 @@ public class OneblockCommands implements CommandExecutor {
                         Double oneblockY = config.getDouble("oneblock-y"), defaultHomeYaw = config.getDouble("default-home-yaw"), defaultHomePitch = config.getDouble("default-home-pitch");
                         player.teleport(new Location(oneblockWorld, oneblock[0], oneblockY + 1, oneblock[1], defaultHomeYaw.floatValue(), defaultHomePitch.floatValue()));
 
-                        // Remove all the blocks except the oneblock and the obsidian below
-                        Location oneBlock = new Location(oneblockWorld, Double.valueOf(oneblock[0]), oneblockY, Double.valueOf(oneblock[1])), protectionBlock = new Location(oneBlock.getWorld(), oneBlock.getX(), oneBlock.getY() - 1, oneBlock.getZ());
-                        int x, y, z;
-                        for (x = start[0]; x <= end[0]; x++)
-                            for (y = start[1]; y <= end[1]; y++)
-                                for (z = start[2]; z <= end[2]; z++) {
-                                    Location current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z));
-                                    if (!current.equals(oneBlock) && !current.equals(protectionBlock)) current.getBlock().setType(Material.AIR);
-                                }
-
                         // Set values
                         base += "home.";
                         config.set(base.concat("x"), oneblock[0]);
@@ -307,11 +297,22 @@ public class OneblockCommands implements CommandExecutor {
                         config.set(base.concat("yaw"), defaultHomeYaw);
                         config.set(base.concat("pitch"), defaultHomePitch);
 
-                        // Save config
-                        plugin.saveConfig();
+                        // Erase blocks async so that they don't lag the server out every time
+                        final Player playerclone = player;
+                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                            // Remove all the blocks except the oneblock and the obsidian below
+                            Location oneBlock = new Location(oneblockWorld, Double.valueOf(oneblock[0]), oneblockY, Double.valueOf(oneblock[1])), protectionBlock = new Location(oneBlock.getWorld(), oneBlock.getX(), oneBlock.getY() - 1, oneBlock.getZ());
+                            int x, y, z;
+                            for (x = start[0]; x <= end[0]; x++)
+                                for (y = start[1]; y <= end[1]; y++)
+                                    for (z = start[2]; z <= end[2]; z++) {
+                                        Location current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z));
+                                        if (!current.equals(oneBlock) && !current.equals(protectionBlock)) current.getBlock().setType(Material.AIR);
+                                    }
 
-                        // Give player a indication of conclusion.
-                        sendInfo(player, "Your Oneblock island has been reset.");
+                            // Give player a indication of conclusion.
+                            sendInfo(playerclone, "Your Oneblock island has been reset.");
+                        });
                     } else sendInfo(player, config.getString("oneblock-reset-warning"));
                 }
             }
