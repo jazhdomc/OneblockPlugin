@@ -4,12 +4,17 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.Statistic;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -140,21 +145,43 @@ public class OneblockListener implements Listener {
         int blockCount = config.getInt(base.concat(".blocks")) + 1;
         config.set(base.concat(".blocks"), blockCount);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Replace the broken block (use starter blocks if starter in section)
-            List<String> starter = config.getStringList("starter");
-            if (starter.size() > blockCount) {
-                String[] parts = starter.get(blockCount).split(":");
-                Material material = Material.getMaterial(parts[0]);
-                if (material == null) {
-                    plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
-                    material = Material.GRASS;
-                }
-                broken.setType(material);
-                if (parts.length > 1) broken.setData(Byte.parseByte(parts[1]));
-                else broken.setData(Byte.parseByte("0"));
-            } else replaceBlock(broken, player);
-        }, 1L);
+        // Drop normal drops
+        World brokenWorld = broken.getWorld();
+        Location dropLocation = loc.clone().add(0.5, 0.5, 0.5);
+        ItemStack tool = player.getInventory().getItemInMainHand();
+        event.setCancelled(true);
+        for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
+        brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(event.getExpToDrop());
+        brokenWorld.playEffect(dropLocation, Effect.STEP_SOUND, broken.getType());
+
+        // Simulate tool use
+        if (tool.getType() != Material.AIR) {
+            short newDurability = (short) ((short) tool.getDurability() + 1);
+            if (newDurability >= tool.getType().getMaxDurability()) {
+                player.getInventory().setItemInMainHand(null);
+                player.getWorld().playSound(dropLocation, Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+            } else tool.setDurability(newDurability);
+        } 
+
+        // Statistics
+        player.incrementStatistic(Statistic.MINE_BLOCK);
+
+        // Exhaustion from mining
+        player.setExhaustion(player.getExhaustion() + 0.005f);
+
+        // Replace the broken block (use starter blocks if starter in section)
+        List<String> starter = config.getStringList("starter");
+        if (starter.size() > blockCount) {
+            String[] parts = starter.get(blockCount).split(":");
+            Material material = Material.getMaterial(parts[0]);
+            if (material == null) {
+                plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                material = Material.GRASS;
+            }
+            broken.setType(material);
+            if (parts.length > 1) broken.setData(Byte.parseByte(parts[1]));
+            else broken.setData(Byte.parseByte("0"));
+        } else replaceBlock(broken, player);
 
         // Get total blocks needed to be out of the phase updates
         List<Integer> phaseLength = config.getIntegerList("phase-length");
