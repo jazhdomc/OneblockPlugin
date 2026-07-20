@@ -151,12 +151,13 @@ public class OneblockListener implements Listener {
         ItemStack tool = player.getInventory().getItemInMainHand();
         event.setCancelled(true);
         for (ItemStack drop : broken.getDrops(tool)) brokenWorld.dropItemNaturally(dropLocation, drop);
-        brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(event.getExpToDrop());
+        int xp = event.getExpToDrop();
+        if (xp > 0) brokenWorld.spawn(dropLocation, ExperienceOrb.class).setExperience(xp);
         brokenWorld.playEffect(dropLocation, Effect.STEP_SOUND, broken.getType());
 
         // Simulate tool use
         ItemMeta meta = tool.getItemMeta();
-        if (tool.getType().getMaxDurability() > 0 && meta != null && meta.isUnbreakable()) {
+        if (tool.getType().getMaxDurability() > 0 && meta != null && !meta.isUnbreakable()) {
             short newDurability = (short) ((short) tool.getDurability() + 1);
             if (newDurability >= tool.getType().getMaxDurability()) {
                 player.getInventory().setItemInMainHand(null);
