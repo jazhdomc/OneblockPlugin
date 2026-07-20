@@ -165,7 +165,7 @@ public class OneblockListener implements Listener {
         } 
 
         // Statistics
-        player.incrementStatistic(Statistic.MINE_BLOCK, 1);
+        player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
 
         // Exhaustion from mining
         player.setExhaustion(player.getExhaustion() + 0.005f);
