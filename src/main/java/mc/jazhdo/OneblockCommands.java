@@ -193,7 +193,7 @@ public class OneblockCommands implements CommandExecutor {
                 if (checkPerms(player, "phase") && hasIsland(player)) {
                     // Setup chest
                     List<String> phases = config.getStringList("phases");
-                    int rows = (int) (Math.ceil(phases.size()/7) + 2);
+                    int rows = (int) (Math.ceil(phases.size() / 7) + 2);
                     Inventory phaseUI = Bukkit.createInventory(player, rows * 9, config.getString("phase-menu.title"));
 
                     // Parse border block
@@ -213,15 +213,22 @@ public class OneblockCommands implements CommandExecutor {
                     int currentPhase = phases.indexOf(config.getString(base.concat("phase")));
                     if (total > config.getInt(base.concat("blocks"))) currentPhase = phases.size();
 
+                    // Get the locked icon beforehand
+                    String[] lockedIcon = config.getString("phase-menu.locked").split(":");
+                    Material lockedMaterial = Material.getMaterial(lockedIcon[0]);
+                    if (lockedMaterial == null) logger.warning("Material ".concat(lockedIcon[0]).concat(" is invalid."));
+
                     // Build the next few rows
                     int phaseOn = 0;
                     List<String> phaseIcons = config.getStringList("phase-menu.icons"), phaseDesc = config.getStringList("phase-descriptions");
                     for (int j = 0; j < rows; j++) {
                         for (int k = 0; k < 7; k++, i++) {
                             if (phaseOn < phaseIcons.size()) {
+                                // Only show the phase's true icon if the phase isn't locked
                                 String[] phaseIcon;
                                 Material phaseMaterial;
                                 if (phaseOn <= currentPhase) {
+                                    // Get the icon material
                                     phaseIcon = phaseIcons.get(phaseOn).split(":");
                                     phaseMaterial = Material.getMaterial(phaseIcon[0]);
 
@@ -231,35 +238,25 @@ public class OneblockCommands implements CommandExecutor {
                                         // Get the phase icon item
                                         ItemStack phaseItem = new ItemStack(phaseMaterial);
 
-                                        // Set the item's metadata value
+                                        // Set the item's durability value
                                         phaseItem.setDurability(phaseIcon.length > 1 ? Short.parseShort(phaseIcon[1]) : 0);
 
-                                        // Get item meta to meddle with it
+                                        // Set item metadata (display name, description, & enchantment for indication of allowed)
                                         ItemMeta meta = phaseItem.getItemMeta();
-
-                                        // Set display name to uppercased title
                                         String title = phases.get(phaseOn);
                                         meta.setDisplayName(title.substring(0, 1).toUpperCase().concat(title.substring(1)));
-
-                                        // Set description (also known as lore)
                                         meta.setLore(List.of(phaseDesc.get(phaseOn)));
-
-                                        // Give a special effect if the item is the current one
                                         if (phaseOn == currentPhase) meta.addEnchant(Enchantment.DURABILITY, 1, true);
-
-                                        // Finish by setting the meta and the item
                                         phaseItem.setItemMeta(meta);
+
+                                        // Set item in slot
                                         phaseUI.setItem(i, phaseItem);
                                     }
                                 } else {
-                                    phaseIcon = config.getString("phase-menu.locked").split(":");
-                                    phaseMaterial = Material.getMaterial(phaseIcon[0]);
-                                    if (phaseMaterial == null) logger.warning("Material ".concat(phaseIcon[0]).concat(" is invalid."));
-                                    else {
-                                        ItemStack phaseItem = new ItemStack(phaseMaterial);
-                                        phaseItem.setDurability(phaseIcon.length > 1 ? Short.parseShort(phaseIcon[1]) : 0);
-                                        phaseUI.setItem(i, phaseItem);
-                                    }
+                                    // Set the locked icon
+                                    ItemStack phaseItem = new ItemStack(lockedMaterial);
+                                    phaseItem.setDurability(lockedIcon.length > 1 ? Short.parseShort(lockedIcon[1]) : 0);
+                                    phaseUI.setItem(i, phaseItem);
                                 }
                                 phaseOn++;
                             } else phaseUI.setItem(i, border);
@@ -282,31 +279,47 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "reset" -> {
                 if (checkPerms(player, "reset") && hasIsland(player)) {
+                    // Make sure a confirm argument is present to make sure the player is ok with going through with this or else show them the warning
                     if (args.length > 1 && args[1].equals("confirm")) {
-                        int islandSpacing = config.getInt("island-spacing");
-                        int range = islandSpacing/2 - 1;
-                        int[] oneblock = {config.getInt("x") * islandSpacing, config.getInt("z") * islandSpacing};
-                        int[] start = {oneblock[0] - range, 0, oneblock[1] - range};
-                        int[] end = {oneblock[0] + range, 255, oneblock[1] + range};
+                        int islandSpacing = config.getInt("island-spacing"), range = islandSpacing / 2 - 1;
+                        int[] oneblock = {config.getInt(base + "x") * islandSpacing, config.getInt(base + "z") * islandSpacing}, start = {oneblock[0] - range, 0, oneblock[1] - range}, end = {oneblock[0] + range, 255, oneblock[1] + range};
                         
-                        int x, y, z;
+                        // Teleport player to ontop their oneblock to make sure they are safe
                         World oneblockWorld = Bukkit.getWorld(config.getString("oneblock-world"));
-                        Block oneBlock = new Location(oneblockWorld, Double.valueOf(oneblock[0]), config.getDouble("oneblock-y"), Double.valueOf(oneblock[1])).getBlock();
+                        Double oneblockY = config.getDouble("oneblock-y"), defaultHomeYaw = config.getDouble("default-home-yaw"), defaultHomePitch = config.getDouble("default-home-pitch");
+                        player.teleport(new Location(oneblockWorld, oneblock[0], oneblockY + 1, oneblock[1], defaultHomeYaw.floatValue(), defaultHomePitch.floatValue()));
+
+                        // Remove all the blocks except the oneblock and the obsidian below
+                        Location oneBlock = new Location(oneblockWorld, Double.valueOf(oneblock[0]), oneblockY, Double.valueOf(oneblock[1])), protectionBlock = new Location(oneBlock.getWorld(), oneBlock.getX(), oneBlock.getY() - 1, oneBlock.getZ());
+                        int x, y, z;
                         for (x = start[0]; x <= end[0]; x++)
                             for (y = start[1]; y <= end[1]; y++)
                                 for (z = start[2]; z <= end[2]; z++) {
-                                    Block current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)).getBlock();
-                                    if (!current.equals(oneBlock)) current.setType(Material.AIR);
+                                    Location current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z));
+                                    if (!current.equals(oneBlock) && !current.equals(protectionBlock)) current.getBlock().setType(Material.AIR);
                                 }
+
+                        // Set values
+                        base += "home.";
+                        config.set(base.concat("x"), oneblock[0]);
+                        config.set(base.concat("y"), oneblockY + 1);
+                        config.set(base.concat("z"), oneblock[1]);
+                        config.set(base.concat("yaw"), defaultHomeYaw);
+                        config.set(base.concat("pitch"), defaultHomePitch);
+
+                        // Save config
+                        plugin.saveConfig();
+
+                        // Give player a indication of conclusion.
+                        sendInfo(player, "Your Oneblock island has been reset.");
                     } else sendInfo(player, config.getString("oneblock-reset-warning"));
                 }
             }
             case "resethome" -> {
                 if (checkPerms(player, "home") && hasIsland(player)) {
-                    double islandSpacing = config.getInt("island-spacing");
-                    
                     // Set values
                     base += "home.";
+                    double islandSpacing = config.getInt("island-spacing");
                     config.set(base.concat("x"), config.getDouble(base.concat("x")) * islandSpacing);
                     config.set(base.concat("y"), config.getDouble("oneblock-y") + 1);
                     config.set(base.concat("z"), config.getDouble(base.concat("z")) * islandSpacing);
@@ -315,6 +328,7 @@ public class OneblockCommands implements CommandExecutor {
 
                     // Save config
                     plugin.saveConfig();
+                    sendInfo(player, "Your home location has been reset.");
                 }
             }
             case "sethome" -> setLocation(args, player, base);
@@ -422,7 +436,7 @@ public class OneblockCommands implements CommandExecutor {
     }
 
     public void sendInfo(Player player, String msg) {
-        sendMessage(player, plugin.getConfig().getString("msg-prefix") + msg);
+        sendMessage(player, ChatColor.YELLOW + plugin.getConfig().getString("msg-prefix") + ChatColor.WHITE + msg);
     }
     
     private void sendMessage(Player player, String msg) {

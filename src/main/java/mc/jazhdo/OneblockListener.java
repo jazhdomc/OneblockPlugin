@@ -128,16 +128,15 @@ public class OneblockListener implements Listener {
     @EventHandler
     // @SuppressWarnings("deprecation")
     public void onBlockBreak(BlockBreakEvent event) {
-        Block broken = event.getBlock();
-        Player player = event.getPlayer();
-        String base = "islands.".concat(player.getName().toLowerCase());
-
         // Verify that the block broken is a oneblock
+        Block broken = event.getBlock();
         Location loc = broken.getLocation();
         int distance = config.getInt("island-spacing");
         if (!loc.getWorld().equals(Bukkit.getWorld(config.getString("oneblock-world"))) || loc.getBlockX() % distance != 0 || loc.getBlockY() != config.getInt("oneblock-y") || loc.getBlockZ() % distance != 0) return;
 
         // Update block count
+        Player player = event.getPlayer();
+        String base = "islands.".concat(player.getName().toLowerCase());
         int blockCount = config.getInt(base.concat(".blocks")) + 1;
         config.set(base.concat(".blocks"), blockCount);
 
@@ -151,7 +150,7 @@ public class OneblockListener implements Listener {
             if (parts.length > 1) broken.setData((parts.length > 1) ? Byte.parseByte(parts[1]) : 0);
         } else replaceBlock(broken, player);
 
-        // Update phase
+        // Get total blocks needed to be out of the phase updates
         List<Integer> phaseLength = config.getIntegerList("phase-length");
         int total = 0;
         for (int i = 0; i < phaseLength.size(); i++) total += phaseLength.get(i);
@@ -185,16 +184,12 @@ public class OneblockListener implements Listener {
 
         // If a chest is to be made
         if (block.toLowerCase().startsWith("chest")) {
-            // Replace block into a chest
+            // Replace block into a chest and get chest
             replace.setType(Material.CHEST);
-
-            // Get the chest as a Chest object
             Chest chest = (Chest) replace.getState();
 
-            // Get the individual items
-            String[] chestItems = block.split(",");
-
             // Loop through all the items and add each one (skip item 0 because that is the string "chest")
+            String[] chestItems = block.split(",");
             for (int i = 1; i < chestItems.length; i++) {
                 // Get the three part;s
                 String[] parts = chestItems[i].split(":");

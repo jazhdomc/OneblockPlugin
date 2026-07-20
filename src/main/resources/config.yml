@@ -89,6 +89,7 @@ phase-descriptions:
   - Some horrible land, but with many colors
   - A lava-filled wasteland
   - A hard to beat fortress in the middle of the ocean
+  - After much work, you found the stronghold! Now just to prepare...
   - Many supplies to get you ready to beat something...
   - After such a long time, finally... THE FINALE!
 
@@ -487,7 +488,7 @@ perm-menu:
     - item_frame
     - grass
     - wheat
-    - brewing_stand
+    - brewing_stand_item
     - bucket
     - water_bucket
     - chest
