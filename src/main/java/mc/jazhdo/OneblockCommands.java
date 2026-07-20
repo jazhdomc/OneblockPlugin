@@ -164,7 +164,7 @@ public class OneblockCommands implements CommandExecutor {
                 if (checkPerms(player, "perm") && hasIsland(player)) {
                     if (args.length > 1 && (args[1].toLowerCase().equals("visitor") || args[1].toLowerCase().equals("trusted"))) {
                         // Create inventory
-                        Inventory permUI = Bukkit.createInventory(null, 27, config.getString("perm-menu.title." + args[1].toLowerCase()));
+                        Inventory permUI = Bukkit.createInventory(player, 27, config.getString("perm-menu.title." + args[1].toLowerCase()));
                         
                         // Set items with their blocks
                         List<String> materials = config.getStringList("perm-menu.blocks"), names = config.getStringList("perm-menu.names"), descriptions = config.getStringList("perm-menu.descriptions"), currentPerms = config.getStringList(base + args[1] + "-perms");
@@ -194,7 +194,7 @@ public class OneblockCommands implements CommandExecutor {
                     // Setup chest
                     List<String> phases = config.getStringList("phases");
                     int rows = (int) (Math.ceil(phases.size()/7) + 2);
-                    Inventory phaseUI = Bukkit.createInventory(null, rows * 9, config.getString("phases-menu.title"));
+                    Inventory phaseUI = Bukkit.createInventory(player, rows * 9, config.getString("phase-menu.title"));
 
                     // Parse border block
                     String[] borderParts = config.getString("phase-menu.border").split(":");
@@ -298,7 +298,7 @@ public class OneblockCommands implements CommandExecutor {
                                     Block current = new Location(oneblockWorld, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)).getBlock();
                                     if (!current.equals(oneBlock)) current.setType(Material.AIR);
                                 }
-                    } else sendInfo(player, "oneblock-reset-warning");
+                    } else sendInfo(player, config.getString("oneblock-reset-warning"));
                 }
             }
             case "resethome" -> {

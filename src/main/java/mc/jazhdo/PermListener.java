@@ -36,15 +36,14 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 
 public class PermListener implements Listener {
-    private final OneblockPlugin plugin;
+    private final FileConfiguration config;
 
     public PermListener(OneblockPlugin plugin) {
-        this.plugin = plugin;
+        this.config = plugin.getConfig();
     }
 
     private void checkPerms(Player player, String perm, Event event) {
         // Find out whose island the player is on
-        FileConfiguration config = plugin.getConfig();
         Set<String> islands = config.getConfigurationSection("islands").getKeys(false);
         Location playerLoc = player.getLocation();
         Double playerX = playerLoc.getX(), playerZ = playerLoc.getZ(), islandSpacing = config.getDouble("island-spacing"), islandSpacingHalf = islandSpacing/2;
@@ -52,10 +51,12 @@ public class PermListener implements Listener {
             String base = "islands.".concat(island).concat(".");
             Double islandX = config.getDouble(base.concat("x")) * islandSpacing, islandZ = config.getDouble(base.concat("z")) * islandSpacing;
             if (playerX > islandX - islandSpacingHalf && playerZ > islandZ - islandSpacingHalf && playerX <= islandX + islandSpacingHalf && playerZ <= islandZ + islandSpacingHalf) {
-                // Check whether or not player is trusted or the trusted all selector is present
-                List<String> trustedList = config.getStringList(base.concat("trusted"));
-                Boolean trusted = trustedList.contains(player.getName().toLowerCase()) || trustedList.contains("*");
-                if ((!trusted && !config.getStringList(base.concat("visitor-perms")).contains(perm)) || (trusted && !config.getStringList(base.concat("trusted-perms")).contains(perm))) cancelEvent(event);
+                if (!player.getName().toLowerCase().equals(island)) {
+                    // Check whether or not player is trusted or the trusted all selector is present
+                    List<String> trustedList = config.getStringList(base.concat("trusted"));
+                    Boolean trusted = trustedList.contains(player.getName().toLowerCase()) || trustedList.contains("*");
+                    if ((!trusted && !config.getStringList(base.concat("visitor-perms")).contains(perm)) || (trusted && !config.getStringList(base.concat("trusted-perms")).contains(perm))) cancelEvent(event);
+                }
                 return;
             }
         }

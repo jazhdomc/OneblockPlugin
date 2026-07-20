@@ -340,7 +340,7 @@ help:
     - home
     - perm <visitor|trusted>
     - phase
-    - phasecheck
+    - phasecount
     - reset
     - resethome
     - sethome [<x> <y> <z>[ <yaw> <pitch>]]
