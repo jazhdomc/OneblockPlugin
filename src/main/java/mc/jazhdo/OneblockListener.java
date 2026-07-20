@@ -155,7 +155,8 @@ public class OneblockListener implements Listener {
         brokenWorld.playEffect(dropLocation, Effect.STEP_SOUND, broken.getType());
 
         // Simulate tool use
-        if (tool.getType() != Material.AIR) {
+        ItemMeta meta = tool.getItemMeta();
+        if (tool.getType().getMaxDurability() > 0 && meta != null && meta.isUnbreakable()) {
             short newDurability = (short) ((short) tool.getDurability() + 1);
             if (newDurability >= tool.getType().getMaxDurability()) {
                 player.getInventory().setItemInMainHand(null);
@@ -204,9 +205,6 @@ public class OneblockListener implements Listener {
             }
             if (!phase.equals(config.getString(base.concat(".phase")))) config.set(base.concat(".phase"), phase);
         }
-
-        // Save changes
-        plugin.saveConfig();
     }
 
     // @SuppressWarnings("deprecation")
