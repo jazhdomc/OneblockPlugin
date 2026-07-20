@@ -161,7 +161,7 @@ public class OneblockCommands implements CommandExecutor {
                 }
             }
             case "perm" -> {
-                if (checkPerms(player, "perm")) {
+                if (checkPerms(player, "perm") && hasIsland(player)) {
                     if (args.length > 1 && (args[1].toLowerCase().equals("visitor") || args[1].toLowerCase().equals("trusted"))) {
                         // Create inventory
                         Inventory permUI = Bukkit.createInventory(null, 27, config.getString("perm-menu.title." + args[1].toLowerCase()));
@@ -190,7 +190,7 @@ public class OneblockCommands implements CommandExecutor {
                 }
             }
             case "phase" -> {
-                if (checkPerms(player, "phase")) {
+                if (checkPerms(player, "phase") && hasIsland(player)) {
                     // Setup chest
                     List<String> phases = config.getStringList("phases");
                     int rows = (int) (Math.ceil(phases.size()/7) + 2);
@@ -275,17 +275,17 @@ public class OneblockCommands implements CommandExecutor {
                 }
             }
             case "phasecount" -> {
-                if (checkPerms(player, "phase")) sendInfo(player, config.getString("phasecount-msg").replace("%p", config.getString(base.concat("phase"))).replace("%c", config.getString(base.concat("blocks"))));
+                if (checkPerms(player, "phase") && hasIsland(player)) sendInfo(player, config.getString("phasecount-msg").replace("%p", config.getString(base.concat("phase"))).replace("%c", config.getString(base.concat("blocks"))));
             }
             case "reload" -> {
                 if (checkPerms(player, "mod")) plugin.reloadConfig();
             }
             case "reset" -> {
-                if (checkPerms(player, "reset")) {
+                if (checkPerms(player, "reset") && hasIsland(player)) {
                     if (args.length > 1 && args[1].equals("confirm")) {
                         int islandSpacing = config.getInt("island-spacing");
                         int range = islandSpacing/2 - 1;
-                        int[] oneblock = {config.getInt("x")*islandSpacing, config.getInt("z")*islandSpacing};
+                        int[] oneblock = {config.getInt("x") * islandSpacing, config.getInt("z") * islandSpacing};
                         int[] start = {oneblock[0] - range, 0, oneblock[1] - range};
                         int[] end = {oneblock[0] + range, 255, oneblock[1] + range};
                         
@@ -302,7 +302,7 @@ public class OneblockCommands implements CommandExecutor {
                 }
             }
             case "resethome" -> {
-                if (checkPerms(player, "home")) {
+                if (checkPerms(player, "home") && hasIsland(player)) {
                     double islandSpacing = config.getInt("island-spacing");
                     
                     // Set values
@@ -370,7 +370,7 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "trust" -> trust(args, player, base);
             case "trustlist" -> {
-                if (checkPerms(player, "trust")) {
+                if (checkPerms(player, "trust") && hasIsland(player)) {
                     List<String> trustList = config.getStringList(base.concat("trusted"));
                     String trustListMsg = config.getString("trusted-list-header");
                     for (int i = 0; i < trustList.size(); i++) trustListMsg += "\n".concat(Integer.toString(i + 1)).concat(". ").concat(trustList.get(i));
@@ -409,6 +409,12 @@ public class OneblockCommands implements CommandExecutor {
         return true;
     }
 
+    private Boolean hasIsland(Player player) {
+        if (config.contains("islands." + player.getName().toLowerCase())) return true;
+        sendInfo(player, ChatColor.RED + "You need a island to perform this command.");
+        return false;
+    }
+
     private Boolean checkPerms(Player player, String perm) {
         if (player.hasPermission("oneblock.".concat(perm))) return true;
         sendInfo(player, ChatColor.RED + "Permission denied. If this is incorrect, get help from a moderator or admin.");
@@ -440,7 +446,7 @@ public class OneblockCommands implements CommandExecutor {
         List<String> msgs = config.getStringList("help.msgs");
 
         // Dynamically build help message with custom colors and strings
-        for (int i = 0; i < cmds.size(); i++) helpMessage += ChatColor.valueOf(config.getString("help.cmd-color").toUpperCase()) + "/oneblock " + cmds.get(i) + ChatColor.valueOf(config.getString("help.msg-color").toUpperCase()) + "- " + msgs.get(i) + "\n";
+        for (int i = 0; i < cmds.size(); i++) helpMessage += ChatColor.valueOf(config.getString("help.cmd-color").toUpperCase()) + "/oneblock " + cmds.get(i) + ChatColor.valueOf(config.getString("help.msg-color").toUpperCase()) + " - " + msgs.get(i) + "\n";
 
         // If player has mod perms, build mod help section
         if (player.hasPermission("oneblock.mod")) {
@@ -452,7 +458,7 @@ public class OneblockCommands implements CommandExecutor {
             msgs = config.getStringList("mod-help.msgs");
 
             // Dynamically build mod-help section with custom colors and strings
-            for (int i = 0; i < cmds.size(); i++) helpMessage += "\n" + ChatColor.valueOf(config.getString("mod-help.cmd-color").toUpperCase()) + "/oneblock " + cmds.get(i) + ChatColor.valueOf(config.getString("mod-help.msg-color").toUpperCase()) + "- " + msgs.get(i);
+            for (int i = 0; i < cmds.size(); i++) helpMessage += "\n" + ChatColor.valueOf(config.getString("mod-help.cmd-color").toUpperCase()) + "/oneblock " + cmds.get(i) + ChatColor.valueOf(config.getString("mod-help.msg-color").toUpperCase()) + " - " + msgs.get(i);
         }
 
         // Send finished help message to player
@@ -464,7 +470,7 @@ public class OneblockCommands implements CommandExecutor {
         String sethome = args[0].toLowerCase().equals("sethome") ? "home" : "spawn";
 
         // Make sure perms exist
-        if (checkPerms(player, sethome.equals("home") ? "home" : "visitor")) {
+        if (checkPerms(player, sethome.equals("home") ? "home" : "visitor") && hasIsland(player)) {
             // Location variables
             double x, y, z;
             float yaw, pitch;
@@ -509,7 +515,7 @@ public class OneblockCommands implements CommandExecutor {
 
     private void trust(String[] args, Player player, String base) {
         // Make sure trust perm exists
-        if (checkPerms(player, "trust")) {
+        if (checkPerms(player, "trust") && hasIsland(player)) {
             // Trust or untrust
             Boolean trust = args[0].toLowerCase().equals("trust");
 

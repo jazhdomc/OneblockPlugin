@@ -67,7 +67,7 @@ starter:
 msg-prefix: "[OneblockPlugin] "
 
 # Guide shown when a player does /oneblock guide
-guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob new\" to get started.\nUse the command: \"/ob phase\" to check your current phase and/or switch to a phase after completing them all.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
+guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob home\" to get started.\nUse the command: \"/ob phase\" to check your current phase and/or switch to a phase after completing them all.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
 
 # Phases (max 28 for the phase selection)
 phases:
