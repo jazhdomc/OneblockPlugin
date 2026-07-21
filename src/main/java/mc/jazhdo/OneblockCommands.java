@@ -190,95 +190,96 @@ public class OneblockCommands implements CommandExecutor {
                 }
             }
             case "phase" -> {
-                if (checkPerms(player, "phase") && hasIsland(player)) {
-                    // Setup chest
-                    List<String> phases = config.getStringList("phases");
-                    int rows = (int) (Math.ceil(phases.size() / 7.0) + 2);
-                    Inventory phaseUI = Bukkit.createInventory(player, rows * 9, config.getString("phase-menu.title"));
+                sendInfo(player, ChatColor.RED + "This command is a work in progress. Check back in a later version to see if it's been added.");
+                // if (checkPerms(player, "phase") && hasIsland(player)) {
+                //     // Setup chest
+                //     List<String> phases = config.getStringList("phases");
+                //     int rows = (int) (Math.ceil(phases.size() / 7.0) + 2);
+                //     Inventory phaseUI = Bukkit.createInventory(player, rows * 9, config.getString("phase-menu.title"));
 
-                    // Parse border block
-                    String[] borderParts = config.getString("phase-menu.border").split(":");
-                    ItemStack border = new ItemStack(Material.getMaterial(borderParts[0]));
-                    border.setDurability(borderParts.length > 1 ? Short.parseShort(borderParts[1]) : 0);
+                //     // Parse border block
+                //     String[] borderParts = config.getString("phase-menu.border").split(":");
+                //     ItemStack border = new ItemStack(Material.getMaterial(borderParts[0]));
+                //     border.setDurability(borderParts.length > 1 ? Short.parseShort(borderParts[1]) : 0);
 
-                    // Set first row of border blocks + the first one on the second row
-                    ItemStack exitButton = new ItemStack(Material.BARRIER);
-                    ItemMeta exitButtonMeta = exitButton.getItemMeta();
-                    exitButtonMeta.setDisplayName("Close Menu");
-                    exitButton.setItemMeta(exitButtonMeta);
-                    phaseUI.setItem(0, exitButton);
-                    int i = 1;
-                    for (; i < 10; i++) phaseUI.setItem(i, border);
+                //     // Set first row of border blocks + the first one on the second row
+                //     ItemStack exitButton = new ItemStack(Material.BARRIER);
+                //     ItemMeta exitButtonMeta = exitButton.getItemMeta();
+                //     exitButtonMeta.setDisplayName("Close Menu");
+                //     exitButton.setItemMeta(exitButtonMeta);
+                //     phaseUI.setItem(0, exitButton);
+                //     int i = 1;
+                //     for (; i < 10; i++) phaseUI.setItem(i, border);
 
-                    // Get locked phases info
-                    List<Integer> phaseLength = config.getIntegerList("phase-length");
-                    int total = 0;
-                    for (int j : phaseLength) total += j;
-                    String currentPhaseString = config.getString(base.concat("phase"));
-                    int currentPhase = phases.indexOf(currentPhaseString);
-                    if (currentPhase == -1) logger.warning(() -> "Current phase " + currentPhaseString + " is not in the phases list.");
-                    if (total < config.getInt(base.concat("blocks"))) currentPhase = phases.size();
+                //     // Get locked phases info
+                //     List<Integer> phaseLength = config.getIntegerList("phase-length");
+                //     int total = 0;
+                //     for (int j : phaseLength) total += j;
+                //     String currentPhaseString = config.getString(base.concat("phase"));
+                //     int currentPhase = phases.indexOf(currentPhaseString);
+                //     if (currentPhase == -1) logger.warning(() -> "Current phase " + currentPhaseString + " is not in the phases list.");
+                //     if (total < config.getInt(base.concat("blocks"))) currentPhase = phases.size();
 
-                    // Get the locked icon beforehand
-                    String[] lockedIcon = config.getString("phase-menu.locked").split(":");
-                    Material lockedMaterial = Material.getMaterial(lockedIcon[0]);
-                    if (lockedMaterial == null) logger.warning("Material ".concat(lockedIcon[0]).concat(" is invalid."));
+                //     // Get the locked icon beforehand
+                //     String[] lockedIcon = config.getString("phase-menu.locked").split(":");
+                //     Material lockedMaterial = Material.getMaterial(lockedIcon[0]);
+                //     if (lockedMaterial == null) logger.warning("Material ".concat(lockedIcon[0]).concat(" is invalid."));
 
-                    // Build the next few rows
-                    int phaseOn = 0;
-                    List<String> phaseIcons = config.getStringList("phase-menu.icons"), phaseDesc = config.getStringList("phase-descriptions");
-                    for (int j = 0; j < rows - 2; j++) {
-                        for (int k = 0; k < 7; k++, i++) {
-                            if (phaseOn < phaseIcons.size()) {
-                                // Only show the phase's true icon if the phase isn't locked
-                                String[] phaseIcon;
-                                Material phaseMaterial;
-                                if (phaseOn <= currentPhase) {
-                                    // Get the icon material
-                                    phaseIcon = phaseIcons.get(phaseOn).split(":");
-                                    phaseMaterial = Material.getMaterial(phaseIcon[0]);
+                //     // Build the next few rows
+                //     int phaseOn = 0;
+                //     List<String> phaseIcons = config.getStringList("phase-menu.icons"), phaseDesc = config.getStringList("phase-descriptions");
+                //     for (int j = 0; j < rows - 2; j++) {
+                //         for (int k = 0; k < 7; k++, i++) {
+                //             if (phaseOn < phaseIcons.size()) {
+                //                 // Only show the phase's true icon if the phase isn't locked
+                //                 String[] phaseIcon;
+                //                 Material phaseMaterial;
+                //                 if (phaseOn <= currentPhase) {
+                //                     // Get the icon material
+                //                     phaseIcon = phaseIcons.get(phaseOn).split(":");
+                //                     phaseMaterial = Material.getMaterial(phaseIcon[0]);
 
-                                    // Make sure the material is valid
-                                    if (phaseMaterial == null) logger.warning("Material ".concat(phaseIcon[0]).concat(" is invalid."));
-                                    else {
-                                        // Get the phase icon item
-                                        ItemStack phaseItem = new ItemStack(phaseMaterial);
+                //                     // Make sure the material is valid
+                //                     if (phaseMaterial == null) logger.warning("Material ".concat(phaseIcon[0]).concat(" is invalid."));
+                //                     else {
+                //                         // Get the phase icon item
+                //                         ItemStack phaseItem = new ItemStack(phaseMaterial);
 
-                                        // Set the item's durability value
-                                        phaseItem.setDurability(phaseIcon.length > 1 ? Short.parseShort(phaseIcon[1]) : 0);
+                //                         // Set the item's durability value
+                //                         phaseItem.setDurability(phaseIcon.length > 1 ? Short.parseShort(phaseIcon[1]) : 0);
 
-                                        // Set item metadata (display name, description, & enchantment for indication of allowed)
-                                        ItemMeta meta = phaseItem.getItemMeta();
-                                        String title = phases.get(phaseOn);
-                                        meta.setDisplayName(title.substring(0, 1).toUpperCase().concat(title.substring(1)));
-                                        meta.setLore(List.of(phaseDesc.get(phaseOn)));
-                                        if (phaseOn == currentPhase) meta.addEnchant(Enchantment.DURABILITY, 5, true);
-                                        phaseItem.setItemMeta(meta);
+                //                         // Set item metadata (display name, description, & enchantment for indication of allowed)
+                //                         ItemMeta meta = phaseItem.getItemMeta();
+                //                         String title = phases.get(phaseOn);
+                //                         meta.setDisplayName(title.substring(0, 1).toUpperCase().concat(title.substring(1)));
+                //                         meta.setLore(List.of(phaseDesc.get(phaseOn)));
+                //                         if (phaseOn == currentPhase) meta.addEnchant(Enchantment.DURABILITY, 5, true);
+                //                         phaseItem.setItemMeta(meta);
 
-                                        // Set item in slot
-                                        phaseUI.setItem(i, phaseItem);
-                                    }
-                                } else {
-                                    // Set the locked icon
-                                    ItemStack phaseItem = new ItemStack(lockedMaterial);
-                                    phaseItem.setDurability(lockedIcon.length > 1 ? Short.parseShort(lockedIcon[1]) : 0);
-                                    ItemMeta phaseMeta = phaseItem.getItemMeta();
-                                    phaseMeta.setDisplayName("Locked phase");
-                                    phaseItem.setItemMeta(phaseMeta);
-                                    phaseUI.setItem(i, phaseItem);
-                                }
-                                phaseOn++;
-                            } else phaseUI.setItem(i, border);
-                        }
-                        for (int l = 0; l < 2; l++, i++) phaseUI.setItem(i, border);
-                    }
+                //                         // Set item in slot
+                //                         phaseUI.setItem(i, phaseItem);
+                //                     }
+                //                 } else {
+                //                     // Set the locked icon
+                //                     ItemStack phaseItem = new ItemStack(lockedMaterial);
+                //                     phaseItem.setDurability(lockedIcon.length > 1 ? Short.parseShort(lockedIcon[1]) : 0);
+                //                     ItemMeta phaseMeta = phaseItem.getItemMeta();
+                //                     phaseMeta.setDisplayName("Locked phase");
+                //                     phaseItem.setItemMeta(phaseMeta);
+                //                     phaseUI.setItem(i, phaseItem);
+                //                 }
+                //                 phaseOn++;
+                //             } else phaseUI.setItem(i, border);
+                //         }
+                //         for (int l = 0; l < 2; l++, i++) phaseUI.setItem(i, border);
+                //     }
 
-                    // Set last row
-                    for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
+                //     // Set last row
+                //     for (int h = 0; h < 8; h++, i++) phaseUI.setItem(i, border);
                     
-                    // Show player the phase selector
-                    player.openInventory(phaseUI);
-                }
+                //     // Show player the phase selector
+                //     player.openInventory(phaseUI);
+                // }
             }
             case "phasecount" -> {
                 if (checkPerms(player, "phase") && hasIsland(player)) sendInfo(player, config.getString("phasecount-msg").replace("%p", config.getString(base.concat("phase"))).replace("%c", config.getString(base.concat("blocks"))));

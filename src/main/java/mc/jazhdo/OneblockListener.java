@@ -74,29 +74,32 @@ public class OneblockListener implements Listener {
 
         // Find which GUI this is
         String inventoryTitle = event.getInventory().getTitle();
-        if (inventoryTitle.equals(config.getString("phase-menu.title"))){
-            // Cancel all clicks so no items leave the inventory
-            event.setCancelled(true);
+        // if (inventoryTitle.equals(config.getString("phase-menu.title"))){
+        //     // Cancel all clicks so no items leave the inventory
+        //     event.setCancelled(true);
 
-            // Make sure slot isn't a error slot
-            int slot = event.getSlot();
-            if (slot < 0) return;
+        //     // Make sure slot isn't a error slot
+        //     int slot = event.getSlot();
+        //     if (slot < 0) return;
 
-            // Check for X slot
-            if (slot == 0) player.closeInventory();
+        //     // Check for X slot
+        //     if (slot == 0) player.closeInventory();
 
-            // Make sure slot is not a border slot
-            List<String> phases = config.getStringList("phases");
-            int row = (int) Math.ceil((slot+1)/9);
-            if (row == (int) (Math.ceil(phases.size() / 7) + 2) || row == 1 || slot % 9 == 1 || slot % 9 == 0) return;
+        //     // Make sure slot is not a border slot
+        //     List<String> phases = config.getStringList("phases");
+        //     int row = (int) Math.ceil((slot+1)/9);
+        //     if (row == (int) (Math.ceil(phases.size() / 7) + 2) || row == 1 || slot % 9 == 1 || slot % 9 == 0) return;
 
-            // Make sure slot is unlocked
-            ItemStack currentItemStack = event.getCurrentItem();
-            if (currentItemStack.hasItemMeta() && currentItemStack.getItemMeta().getDisplayName().equals("Locked phase")) return;
+        //     ItemStack currentItemStack = event.getCurrentItem();
+        //     if (currentItemStack.hasItemMeta() && currentItemStack.getItemMeta().hasDisplayName()) {
+        //         // Make sure slot is unlocked
+        //         if (currentItemStack.getItemMeta().getDisplayName().equals("Locked phase")) return;
 
-            // Set new phase
-            config.set("islands." + player.getName().toLowerCase() + ".phase", event.getCurrentItem().getItemMeta().getDisplayName().toLowerCase());
-        } else if (inventoryTitle.equals(config.getString("perm-menu.title.visitor")) || inventoryTitle.equals(config.getString("perm-menu.title.trusted"))) {
+        //         // Set new phase
+        //         config.set("islands." + player.getName().toLowerCase() + ".phase", currentItemStack.getItemMeta().getDisplayName().toLowerCase());
+        //     }
+        // } else 
+        if (inventoryTitle.equals(config.getString("perm-menu.title.visitor")) || inventoryTitle.equals(config.getString("perm-menu.title.trusted"))) {
             // Make sure nothing leaves the inventory
             event.setCancelled(true);
 
