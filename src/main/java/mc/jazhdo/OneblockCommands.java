@@ -3,7 +3,6 @@ package mc.jazhdo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -194,7 +193,7 @@ public class OneblockCommands implements CommandExecutor {
                 if (checkPerms(player, "phase") && hasIsland(player)) {
                     // Setup chest
                     List<String> phases = config.getStringList("phases");
-                    int rows = (int) (Math.ceil(phases.size() / 7) + 2);
+                    int rows = (int) (Math.ceil(phases.size() / 7.0) + 2);
                     Inventory phaseUI = Bukkit.createInventory(player, rows * 9, config.getString("phase-menu.title"));
 
                     // Parse border block
@@ -214,7 +213,7 @@ public class OneblockCommands implements CommandExecutor {
                     String currentPhaseString = config.getString(base.concat("phase"));
                     int currentPhase = phases.indexOf(currentPhaseString);
                     if (currentPhase == -1) logger.warning(() -> "Current phase " + currentPhaseString + " is not in the phases list.");
-                    if (total > config.getInt(base.concat("blocks"))) currentPhase = phases.size();
+                    if (total < config.getInt(base.concat("blocks"))) currentPhase = phases.size();
 
                     // Get the locked icon beforehand
                     String[] lockedIcon = config.getString("phase-menu.locked").split(":");
@@ -230,7 +229,6 @@ public class OneblockCommands implements CommandExecutor {
                                 // Only show the phase's true icon if the phase isn't locked
                                 String[] phaseIcon;
                                 Material phaseMaterial;
-                                logger.log(Level.INFO, "phaseOn: {0} currentPhase: {1}", new int[]{phaseOn, currentPhase});
                                 if (phaseOn <= currentPhase) {
                                     // Get the icon material
                                     phaseIcon = phaseIcons.get(phaseOn).split(":");
@@ -262,6 +260,7 @@ public class OneblockCommands implements CommandExecutor {
                                     phaseItem.setDurability(lockedIcon.length > 1 ? Short.parseShort(lockedIcon[1]) : 0);
                                     ItemMeta phaseMeta = phaseItem.getItemMeta();
                                     phaseMeta.setDisplayName("Locked Item");
+                                    phaseItem.setItemMeta(phaseMeta);
                                     phaseUI.setItem(i, phaseItem);
                                 }
                                 phaseOn++;
