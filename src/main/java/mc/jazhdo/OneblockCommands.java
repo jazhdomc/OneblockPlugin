@@ -112,8 +112,8 @@ public class OneblockCommands implements CommandExecutor {
                         config.set(base.concat("blocks"), 0);
                         config.set(base.concat("phase"), config.getStringList("phases").get(0));
                         config.set(base.concat("trusted"), new ArrayList<>());
-                        config.set(base.concat("trusted-perms"), new ArrayList<>());
-                        config.set(base.concat("visitor-perms"), new ArrayList<>());
+                        config.set(base.concat("trusted-perms"), List.of("player-move", "crafting-use"));
+                        config.set(base.concat("visitor-perms"), List.of("player-move"));
 
                         // Save all the changes
                         plugin.saveConfig();
@@ -365,7 +365,7 @@ public class OneblockCommands implements CommandExecutor {
                                     sendInfo(player, "Teleporting %p to you.".replace("%p", args[1]));
                                     sendInfo(Bukkit.getPlayer(args[1]), "Teleporting you to %p.".replace("%p", player.getName()));
                                 } else sendInfo(player, "Unsuccessful teleportation. Player %p offline.".replace("%p", args[1]));
-                                break;
+                                return true;
                             }
                         }
                         sendInfo(player, "Unsuccessful tpa. Request not found");
@@ -527,6 +527,9 @@ public class OneblockCommands implements CommandExecutor {
 
             // Save
             plugin.saveConfig();
+
+            // Completion message
+            sendInfo(player, "Set " + sethome + " location.");
         }
     }
 

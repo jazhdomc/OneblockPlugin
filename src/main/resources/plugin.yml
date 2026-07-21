@@ -1,5 +1,5 @@
 name: OneblockPlugin
-version: 0.1.11
+version: 0.1.12
 description: The plugin used in the oneblock server of JazhdoMC.
 author: jazhdo
 main: mc.jazhdo.OneblockPlugin
@@ -46,3 +46,4 @@ permissions:
     default: true
   oneblock.trust:
     description: Manage their own island's trusted players
+    default: true

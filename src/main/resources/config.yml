@@ -67,7 +67,7 @@ starter:
 msg-prefix: "[OneblockPlugin] "
 
 # Guide shown when a player does /oneblock guide
-guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob home\" to get started.\nUse the command: \"/ob phase\" to check your current phase and/or switch to a phase after completing them all.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
+guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob home\" to get started.\nUse the command: \"/ob phasecount\" to check your current phase and block count.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
 
 # Phases (max 28 for the phase selection)
 phases:
@@ -149,7 +149,7 @@ phase-blocks:
     - BROWN_MUSHROOM:0
     - RED_MUSHROOM:0
     - CHEST,WHEAT_SEEDS:0:8,BONE_MEAL:15:4,APPLE:0:2
-    - CHEST,OAK_WOOD:0:16,STICK:0:8,STRING:0:4
+    - CHEST,LOG:0:16,STICK:0:8,STRING:0:4
     - CHEST,WHEAT:0:8,CARROT:0:4,POTATO:0:4
     - CHEST,LEATHER:0:4,FEATHER:0:8,EGG:0:4
 
