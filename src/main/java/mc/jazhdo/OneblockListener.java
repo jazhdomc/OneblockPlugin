@@ -36,7 +36,7 @@ public class OneblockListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         // Figure out which island is 0 0 else teleport them to their island respawn point
         Player player = event.getPlayer();
-        if (config.getString("islands.".concat(player.getName().toLowerCase())) == null) {
+        if (!config.contains("islands." + player.getName().toLowerCase())) {
             Set<String> islands = config.getConfigurationSection("islands").getKeys(false);
             Double playerX = 0d;
             Double playerZ = 0d;
@@ -53,10 +53,10 @@ public class OneblockListener implements Listener {
                 }
             }
             if (currentIsland == null) return;
-            player.teleport(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(currentIsland.concat("x")), config.getDouble(currentIsland.concat("y")), config.getDouble(currentIsland.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
+            event.setRespawnLocation(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(currentIsland.concat("x")), config.getDouble(currentIsland.concat("y")), config.getDouble(currentIsland.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
         } else {
             String base = "islands.".concat(player.getName().toLowerCase()).concat(".home.");
-            player.teleport(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(base.concat("x")), config.getDouble(base.concat("y")), config.getDouble(base.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
+            event.setRespawnLocation(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(base.concat("x")), config.getDouble(base.concat("y")), config.getDouble(base.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
         }
     }
 
