@@ -356,7 +356,7 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "tpa" -> {
                 if (checkPerms(player, "tp-request")) {
-                    if (args.length < 1) sendInfo(player, "\"player\" argument required.");
+                    if (args.length < 2) sendInfo(player, "\"player\" argument required.");
                     else {
                         for (int i = 0; i < tpRequests.size(); i++) {
                             TpRequest current = tpRequests.get(i);
@@ -374,7 +374,7 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "tpr" -> {
                 if (checkPerms(player, "tp-request")) {
-                    if (args.length < 1) sendInfo(player, "\"player\" argument required");
+                    if (args.length < 2) sendInfo(player, "\"player\" argument required");
                     else {
                         TpRequest request = new TpRequest(player.getName(), args[1]);
                         request.setTask(Bukkit.getScheduler().runTaskLater(plugin, () -> tpRequests.remove(request), 1200L));
