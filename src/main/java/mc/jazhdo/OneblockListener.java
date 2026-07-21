@@ -91,10 +91,8 @@ public class OneblockListener implements Listener {
             if (row == (int) (Math.ceil(phases.size() / 7) + 2) || row == 1 || slot % 9 == 1 || slot % 9 == 0) return;
 
             // Make sure slot is unlocked
-            String[] locked = config.getString("phase-menu.locked").split(":");
-            ItemStack lockedItem = new ItemStack(Material.getMaterial(locked[0]));
-            lockedItem.setDurability(Short.parseShort(locked[1]));
-            if (event.getCurrentItem() == lockedItem) return;
+            ItemStack currentItemStack = event.getCurrentItem();
+            if (currentItemStack.hasItemMeta() && currentItemStack.getItemMeta().getDisplayName().equals("Locked phase")) return;
 
             // Set new phase
             config.set("islands." + player.getName().toLowerCase() + ".phase", event.getCurrentItem().getItemMeta().getDisplayName().toLowerCase());

@@ -202,7 +202,11 @@ public class OneblockCommands implements CommandExecutor {
                     border.setDurability(borderParts.length > 1 ? Short.parseShort(borderParts[1]) : 0);
 
                     // Set first row of border blocks + the first one on the second row
-                    phaseUI.setItem(0, new ItemStack(Material.BARRIER));
+                    ItemStack exitButton = new ItemStack(Material.BARRIER);
+                    ItemMeta exitButtonMeta = exitButton.getItemMeta();
+                    exitButtonMeta.setDisplayName("Close Menu");
+                    exitButton.setItemMeta(exitButtonMeta);
+                    phaseUI.setItem(0, exitButton);
                     int i = 1;
                     for (; i < 10; i++) phaseUI.setItem(i, border);
 
@@ -248,7 +252,7 @@ public class OneblockCommands implements CommandExecutor {
                                         String title = phases.get(phaseOn);
                                         meta.setDisplayName(title.substring(0, 1).toUpperCase().concat(title.substring(1)));
                                         meta.setLore(List.of(phaseDesc.get(phaseOn)));
-                                        if (phaseOn == currentPhase) meta.addEnchant(Enchantment.DURABILITY, 1, true);
+                                        if (phaseOn == currentPhase) meta.addEnchant(Enchantment.DURABILITY, 5, true);
                                         phaseItem.setItemMeta(meta);
 
                                         // Set item in slot
@@ -259,7 +263,7 @@ public class OneblockCommands implements CommandExecutor {
                                     ItemStack phaseItem = new ItemStack(lockedMaterial);
                                     phaseItem.setDurability(lockedIcon.length > 1 ? Short.parseShort(lockedIcon[1]) : 0);
                                     ItemMeta phaseMeta = phaseItem.getItemMeta();
-                                    phaseMeta.setDisplayName("Locked Item");
+                                    phaseMeta.setDisplayName("Locked phase");
                                     phaseItem.setItemMeta(phaseMeta);
                                     phaseUI.setItem(i, phaseItem);
                                 }
