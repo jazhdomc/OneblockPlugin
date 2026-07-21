@@ -69,18 +69,6 @@ msg-prefix: "[OneblockPlugin] "
 # Guide shown when a player does /oneblock guide
 guide: "Welcome to JazhdoMC's oneblock server!\n\nUse the command: \"/ob home\" to get started.\nUse the command: \"/ob phasecount\" to check your current phase and block count.\nYour land spans from (oneblock-x + 500, oneblock-z + 500) to (oneblock-x - 499, oneblock-z - 499)\n\nUse the command \"/ob help\" for help."
 
-# Phases (max 28 for the phase selection)
-phases:
-  - plains
-  - underground
-  - winter
-  - badlands
-  - nether
-  - monument
-  - stronghold
-  - supplies
-  - end
-
 # Phase descriptions
 phase-descriptions:
   - A grassy starter phase
@@ -119,7 +107,7 @@ phase-menu:
 # The number of blocks in each phase
 phase-length: [300, 200, 150, 250, 350, 100, 150, 550, 400]
 
-# Blocks to be randomized for phases
+# Blocks for random choice in phases (phases must be less than or equal to 28)
 # Format:
 # 
 #   Normal Blocks:
@@ -148,7 +136,7 @@ phase-blocks:
     - SAPLING:0
     - BROWN_MUSHROOM:0
     - RED_MUSHROOM:0
-    - CHEST,WHEAT_SEEDS:0:8,BONE_MEAL:15:4,APPLE:0:2
+    - CHEST,SEEDS:0:8,COBBLESTONE:0:4,APPLE:0:2
     - CHEST,LOG:0:16,STICK:0:8,STRING:0:4
     - CHEST,WHEAT:0:8,CARROT:0:4,POTATO:0:4
     - CHEST,LEATHER:0:4,FEATHER:0:8,EGG:0:4
@@ -171,8 +159,8 @@ phase-blocks:
     - MOSSY_COBBLESTONE:0
     - COBBLESTONE:0
     - CHEST,TORCH:0:16,IRON_INGOT:0:4,BREAD:0:3
-    - CHEST,COAL:0:16,IRON_PICKAXE:0:1,IRON_SHOVEL:0:1
-    - CHEST,REDSTONE:0:16,LAPIS:0:8,GLOWSTONE_DUST:0:4
+    - CHEST,COAL:0:16,IRON_INGOT:0:3,IRON_SPADE:0:1
+    - CHEST,REDSTONE:0:16,INK_SACK:4:8,GLOWSTONE_DUST:0:4
     - CHEST,DIAMOND:0:2,IRON_INGOT:0:8,GOLD_INGOT:0:4
 
   winter:
@@ -215,8 +203,8 @@ phase-blocks:
     - STAINED_CLAY:13
     - STAINED_CLAY:14
     - STAINED_CLAY:15
-    - RED_SAND:0
-    - RED_SAND:0
+    - SAND:1
+    - SAND:1
     - SAND:0
     - GRAVEL:0
     - DEAD_BUSH:0
@@ -246,10 +234,10 @@ phase-blocks:
     - QUARTZ_ORE:0
     - QUARTZ_BLOCK:0
     - BONE_BLOCK:0
-    - CHEST,NETHER_WART:0:8,BLAZE_ROD:0:2,GOLD_INGOT:0:4,FIRE_CHARGE:0:4
+    - CHEST,NETHER_WARTS:0:8,BLAZE_ROD:0:2,GOLD_INGOT:0:4,FIREBALL:0:4
     - CHEST,MAGMA_CREAM:0:4,BLAZE_POWDER:0:8,GHAST_TEAR:0:1
     - CHEST,IRON_BOOTS:0:1,IRON_CHESTPLATE:0:1,GOLDEN_APPLE:0:1
-    - CHEST,QUARTZ:0:16,GLOWSTONE_DUST:0:8,NETHER_WART:0:4
+    - CHEST,QUARTZ:0:16,GLOWSTONE_DUST:0:8,NETHER_WARTS:0:4
 
   ocean:
     - PRISMARINE:0
@@ -322,7 +310,7 @@ phase-blocks:
     - CHORUS_FLOWER:0
     - DRAGON_EGG:0
     - CHEST,ENDER_PEARL:0:8,SHULKER_SHELL:0:2,CHORUS_FRUIT:0:16,ELYTRA:0:1
-    - CHEST,END_CRYSTAL:0:1,END_ROD:0:8,END_STONE:0:16
+    - CHEST,ENDER_CRYSTAL:0:1,END_ROD:0:8,END_STONE:0:16
     - CHEST,DIAMOND_SWORD:0:1,DIAMOND_CHESTPLATE:0:1,GOLDEN_APPLE:1:1
     - CHEST,SHULKER_SHELL:0:4,DRAGON_BREATH:0:4,SPECTRAL_ARROW:0:16
 

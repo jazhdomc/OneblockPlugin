@@ -23,6 +23,15 @@ public class TpRequest {
         this.task = task;
     }
 
+    /**
+     * Returns the player from the tp request
+     * 
+     * @return A list in the format: [from, to]
+     */
+    public String[] getPlayers() {
+        return new String[] {from, to};
+    }
+
     public boolean tpPlayer() {
         task.cancel();
         Player fromPlayer = Bukkit.getPlayer(from);

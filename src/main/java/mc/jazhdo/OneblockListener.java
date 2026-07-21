@@ -1,9 +1,12 @@
 package mc.jazhdo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -26,10 +29,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class OneblockListener implements Listener {
     private final OneblockPlugin plugin;
     private final FileConfiguration config;
+    private final Logger log;
 
     public OneblockListener(OneblockPlugin plugin) {
         this.plugin = plugin;
         config = plugin.getConfig();
+        log = plugin.getLogger();
     }
 
     @EventHandler
@@ -177,7 +182,7 @@ public class OneblockListener implements Listener {
                 String[] parts = starter.get(blockCount).split(":");
                 Material material = Material.getMaterial(parts[0]);
                 if (material == null) {
-                    plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                    log.warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
                     material = Material.GRASS;
                 }
                 broken.setType(material);
@@ -191,7 +196,7 @@ public class OneblockListener implements Listener {
 
             // Only update phase if phases have not yet been finished
             if (blockCount < total) {
-                List<String> phases = config.getStringList("phases");
+                List<String> phases = new ArrayList<>(config.getConfigurationSection("phase-blocks").getKeys(false));
                 String phase = phases.get(phases.size() - 1);
 
                 // Find correct phase
@@ -211,8 +216,18 @@ public class OneblockListener implements Listener {
     // @SuppressWarnings("deprecation")
     public void replaceBlock(Block replace, Player player) {
         // Get a random block
-        List<String> blocks = config.getStringList("phase-blocks." + config.getString("islands." + player.getName().toLowerCase() + ".phase"));
-        String block = blocks.get((int) (Math.random() * blocks.size()));
+        OneblockCommands cmds = plugin.getCommands();
+        String playerPhase = config.getString("islands." + player.getName().toLowerCase() + ".phase");
+        if (playerPhase == null) {
+            cmds.sendInfo(player, ChatColor.RED + "Error fetching your phase / island. Make sure you have a island and contact staff for help. Defaulting to plains phase.");
+            playerPhase = "plains";
+        }
+        List<String> blocks = config.getStringList("phase-blocks." + playerPhase);
+        String block;
+        if (blocks.isEmpty()) {
+            cmds.sendInfo(player, ChatColor.RED + "Error fetching your phase's blocks. Contact staff for help. Defaulting to grass block.");
+            block = "grass";
+        } else block = blocks.get((int) (Math.random() * blocks.size()));
 
         // If a chest is to be made
         if (block.toLowerCase().startsWith("chest")) {
@@ -223,14 +238,17 @@ public class OneblockListener implements Listener {
             // Loop through all the items and add each one (skip item 0 because that is the string "chest")
             String[] chestItems = block.split(",");
             for (int i = 1; i < chestItems.length; i++) {
-                // Get the three part;s
+                // Get the three parts
                 String[] parts = chestItems[i].split(":");
 
                 // Get Material object from name
                 Material material = Material.getMaterial(parts[0]);
 
                 // In case material is incorrect
-                if (material == null) plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid."));
+                if (material == null) {
+                    log.warning("Chest material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                    material = Material.GRASS;
+                }
 
                 // Create item
                 ItemStack item = new ItemStack(material, parts.length > 2 ? Integer.parseInt(parts[2]) : 1);
@@ -251,7 +269,7 @@ public class OneblockListener implements Listener {
 
             // In case material is incorrect
             if (material == null) {
-                plugin.getLogger().warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                log.warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
                 material = Material.GRASS;
             }
 

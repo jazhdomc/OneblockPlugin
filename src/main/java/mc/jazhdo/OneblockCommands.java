@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -50,7 +51,7 @@ public class OneblockCommands implements CommandExecutor {
         Player player = (Player) sender;
         if (args.length == 0) {
             if (checkPerms(player, "help")) sendHelp(player);
-            else sendInfo(player, "Help denied.");
+            else sendInfo(player, ChatColor.RED + "Help denied.");
             return true;
         }
 
@@ -92,28 +93,29 @@ public class OneblockCommands implements CommandExecutor {
                         double x = loc.getX(), y = loc.getY(), z = loc.getZ();
 
                         // Set config values
-                        config.set(base.concat("x"), x/islandSpacing);
-                        config.set(base.concat("z"), z/islandSpacing);
+                        config.set(base + "x", x/islandSpacing);
+                        ConfigurationSection section = config.getConfigurationSection(base);
+                        section.set("z", z/islandSpacing);
                         homeX = x;
                         homeY = y + 1;
                         homeZ = z;
                         yaw = config.getDouble("default-home-yaw");
                         pitch = config.getDouble("default-home-pitch");
-                        config.set(base.concat("home.x"), homeX);
-                        config.set(base.concat("home.y"), homeY);
-                        config.set(base.concat("home.z"), homeZ);
-                        config.set(base.concat("home.yaw"), yaw);
-                        config.set(base.concat("home.pitch"), pitch);
-                        config.set(base.concat("spawn.x"), homeX);
-                        config.set(base.concat("spawn.y"), homeY);
-                        config.set(base.concat("spawn.z"), homeZ);
-                        config.set(base.concat("spawn.yaw"), yaw);
-                        config.set(base.concat("spawn.pitch"), pitch);
-                        config.set(base.concat("blocks"), 0);
-                        config.set(base.concat("phase"), config.getStringList("phases").get(0));
-                        config.set(base.concat("trusted"), new ArrayList<>());
-                        config.set(base.concat("trusted-perms"), List.of("player-move", "crafting-use"));
-                        config.set(base.concat("visitor-perms"), List.of("player-move"));
+                        section.set("home.y", homeY);
+                        section.set("home.x", homeX);
+                        section.set("home.z", homeZ);
+                        section.set("home.yaw", yaw);
+                        section.set("home.pitch", pitch);
+                        section.set("spawn.x", homeX);
+                        section.set("spawn.y", homeY);
+                        section.set("spawn.z", homeZ);
+                        section.set("spawn.yaw", yaw);
+                        section.set("spawn.pitch", pitch);
+                        section.set("blocks", 0);
+                        section.set("phase", (new ArrayList<>(config.getConfigurationSection("phase-blocks").getKeys(false))).get(0));
+                        section.set("trusted", new ArrayList<>());
+                        section.set("trusted-perms", List.of("player-move", "crafting-use"));
+                        section.set("visitor-perms", List.of("player-move"));
 
                         // Save all the changes
                         plugin.saveConfig();
@@ -186,7 +188,7 @@ public class OneblockCommands implements CommandExecutor {
 
                         // Show player
                         player.openInventory(permUI);
-                    } else sendInfo(player, "<visitor|trusted> argument required to be \"visitor\" or \"trusted\". (/oneblock perm <visitor|trusted>)");
+                    } else sendInfo(player, ChatColor.RED + "<visitor|trusted> argument required to be \"visitor\" or \"trusted\". (/oneblock perm <visitor|trusted>)");
                 }
             }
             case "phase" -> {
@@ -300,12 +302,12 @@ public class OneblockCommands implements CommandExecutor {
                         player.teleport(new Location(oneblockWorld, oneblock[0], oneblockY + 1, oneblock[1], defaultHomeYaw.floatValue(), defaultHomePitch.floatValue()));
 
                         // Set values
-                        base += "home.";
-                        config.set(base.concat("x"), oneblock[0]);
-                        config.set(base.concat("y"), oneblockY + 1);
-                        config.set(base.concat("z"), oneblock[1]);
-                        config.set(base.concat("yaw"), defaultHomeYaw);
-                        config.set(base.concat("pitch"), defaultHomePitch);
+                        ConfigurationSection section = config.getConfigurationSection(base + "home");
+                        section.set("x", oneblock[0]);
+                        section.set("y", oneblockY + 1);
+                        section.set("z", oneblock[1]);
+                        section.set("yaw", defaultHomeYaw);
+                        section.set("pitch", defaultHomePitch);
 
                         // Remove all the blocks except the oneblock and the obsidian below
                         int x, y, z;
@@ -319,21 +321,21 @@ public class OneblockCommands implements CommandExecutor {
             case "resethome" -> {
                 if (checkPerms(player, "home") && hasIsland(player)) {
                     // Set values
-                    base += "home.";
+                    ConfigurationSection section = config.getConfigurationSection(base + "home");
                     double islandSpacing = config.getInt("island-spacing");
-                    config.set(base.concat("x"), config.getDouble(base.concat("x")) * islandSpacing);
-                    config.set(base.concat("y"), config.getDouble("oneblock-y") + 1);
-                    config.set(base.concat("z"), config.getDouble(base.concat("z")) * islandSpacing);
-                    config.set(base.concat("yaw"), config.getDouble("default-home-yaw"));
-                    config.set(base.concat("pitch"), config.getDouble("default-home-pitch"));
+                    section.set("x", config.getDouble(base.concat("x")) * islandSpacing);
+                    section.set("y", config.getDouble("oneblock-y") + 1);
+                    section.set("z", config.getDouble(base.concat("z")) * islandSpacing);
+                    section.set("yaw", config.getDouble("default-home-yaw"));
+                    section.set("pitch", config.getDouble("default-home-pitch"));
 
                     // Save config
                     plugin.saveConfig();
                     sendInfo(player, "Your home location has been reset.");
                 }
             }
-            case "sethome" -> setLocation(args, player, base);
-            case "setspawn" -> setLocation(args, player, base);
+            case "sethome" -> setLocation(args, player, base, true);
+            case "setspawn" -> setLocation(args, player, base, false);
             case "spawn" -> visit(player, player.getName());
             case "tp" -> {
                 if (checkPerms(player, "mod")) {
@@ -341,10 +343,7 @@ public class OneblockCommands implements CommandExecutor {
                     String[] parts = args[1].split(",");
                     if (parts.length > 1) {
                         // Get coords
-                        double islandSpacing = config.getDouble("island-spacing");
-                        double x = Double.parseDouble(parts[0]) * islandSpacing;
-                        double z = Double.parseDouble(parts[1]) * islandSpacing;
-                        double y = config.getDouble("oneblock-y") + 1;
+                        double islandSpacing = config.getDouble("island-spacing"), x = Double.parseDouble(parts[0]) * islandSpacing, z = Double.parseDouble(parts[1]) * islandSpacing, y = config.getDouble("oneblock-y") + 1;
 
                         // Send teleporting message
                         sendInfo(player, "Teleporting to x: ".concat(Double.toString(x)).concat(" y: ").concat(Double.toString(y)).concat(" z: ").concat(Double.toString(z)));
@@ -358,13 +357,12 @@ public class OneblockCommands implements CommandExecutor {
                 if (checkPerms(player, "tp-request")) {
                     if (args.length < 2) sendInfo(player, "\"player\" argument required.");
                     else {
-                        for (int i = 0; i < tpRequests.size(); i++) {
-                            TpRequest current = tpRequests.get(i);
+                        for (TpRequest current : tpRequests) {
                             if (current.ifAccept(args[1], player.getName())) {
                                 if (current.tpPlayer()) {
-                                    sendInfo(player, "Teleporting %p to you.".replace("%p", args[1]));
-                                    sendInfo(Bukkit.getPlayer(args[1]), "Teleporting you to %p.".replace("%p", player.getName()));
-                                } else sendInfo(player, "Unsuccessful teleportation. Player %p offline.".replace("%p", args[1]));
+                                    sendInfo(player, "Teleporting " + args[1] + " to you.");
+                                    sendInfo(Bukkit.getPlayer(args[1]), "Teleporting you to " + player.getName() + ".");
+                                } else sendInfo(player, "Unsuccessful teleportation. Player " + args[1] + " offline.");
                                 return true;
                             }
                         }
@@ -374,44 +372,59 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "tpr" -> {
                 if (checkPerms(player, "tp-request")) {
-                    if (args.length < 2) sendInfo(player, "\"player\" argument required");
-                    else {
-                        TpRequest request = new TpRequest(player.getName(), args[1]);
-                        request.setTask(Bukkit.getScheduler().runTaskLater(plugin, () -> tpRequests.remove(request), 1200L));
-                        tpRequests.add(request);
-                        sendInfo(player, "TP request made.");
-                    }
+                    // Make sure a player argument was given
+                    if (args.length > 1) {
+                        // Make sure the player teleporting to is online
+                        Player to = Bukkit.getPlayer(args[1]);
+                        if (to == null) sendInfo(player, ChatColor.RED + "Player " + args[1] + " was not found. Make sure they are online.");
+                        else {
+                            // Create new request
+                            TpRequest request = new TpRequest(player.getName(), args[1]);
+                            request.setTask(Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                // Send expiration notices
+                                String[] players = request.getPlayers();
+                                Player player1 = Bukkit.getPlayer(players[0]), player2 = Bukkit.getPlayer(players[1]);
+                                if (player1 != null) sendInfo(player1, "Your teleportation request to " + players[1] + " has expired.");
+                                if (player2 != null) sendInfo(player2, players[0] + "'s teleportation request to you has expired.");
+
+                                // Remove request
+                                tpRequests.remove(request);
+                            }, 1200L));
+                            tpRequests.add(request);
+
+                            // Notify both parties of the request
+                            sendInfo(player, "Teleportation request sent. It will expire in 60 seconds.");
+                            sendInfo(to, "You have recieved a teleportation request from" + player.getName() + ". It will expire in 60 seconds.");
+                        }
+                    } else sendInfo(player, ChatColor.RED + "\"player\" argument required");
                 }
             }
-            case "trust" -> trust(args, player, base);
+            case "trust" -> trust(args, player, base, true);
             case "trustlist" -> {
                 if (checkPerms(player, "trust") && hasIsland(player)) {
                     List<String> trustList = config.getStringList(base.concat("trusted"));
-                    String trustListMsg = config.getString("trusted-list-header");
-                    for (int i = 0; i < trustList.size(); i++) trustListMsg += "\n".concat(Integer.toString(i + 1)).concat(". ").concat(trustList.get(i));
+                    String trustListMsg = ChatColor.YELLOW + config.getString("trusted-list-header") + ChatColor.WHITE;
+                    for (int i = 0; i < trustList.size(); i++) trustListMsg += "\n" + Integer.toString(i + 1) + ". " + trustList.get(i);
                     sendMessage(player, trustListMsg);
                 }
             }
-            case "untrust" -> trust(args, player, base);
+            case "untrust" -> trust(args, player, base, false);
             case "user" -> {
                 if (checkPerms(player, "mod")) {
-                    if (args.length < 2) sendInfo(player, "\"player\" argument required.");
-                    else {
-                        base = "islands.".concat(args[1].toLowerCase()).concat(".");
-                        sendMessage(player,
+                    // Make sure player argument was given
+                    if (args.length > 1) {
+                        // Make sure player has a island
+                        ConfigurationSection section = config.getConfigurationSection("islands." + args[1].toLowerCase());
+                        if (section == null) sendInfo(player, ChatColor.RED + "Player " + args[1] + " does not have a island.");
+                        else sendMessage(player,
                             config.getString("oneblock-user-header").replace("%p", args[1])
-                            .concat("\nIsland: x: ").concat(config.getString(base.concat("x")))
-                            .concat(" y: ").concat(config.getString(base.concat("y")))
-                            .concat("\nHome: x: ").concat(config.getString(base.concat("home.x")))
-                            .concat(" y: ").concat(config.getString(base.concat("home.y")))
-                            .concat(" z: ").concat(config.getString(base.concat("home.z")))
-                            .concat("\nVisitor Spawn: x: ").concat(config.getString(base.concat("spawn.x")))
-                            .concat(" y: ").concat(config.getString(base.concat("spawn.y")))
-                            .concat(" z: ").concat(config.getString(base.concat("spawn.z")))
-                            .concat("\nBlocks: ").concat(config.getString(base.concat("blocks")))
-                            .concat("\nPhase: ").concat(config.getString(base.concat("phase")))
+                            + "\nIsland: x: " + section.getString("x") + " y: " + section.getString("y")
+                            + "\nHome: x: " + section.getString("home.x") + " y: " + section.getString("home.y") + " z: " + section.getString("home.z")
+                            + "\nVisitor Spawn: x: " + section.getString("spawn.x") + " y: " + section.getString("spawn.y") + " z: " + section.getString("spawn.z")
+                            + "\nBlocks: " + section.getString("blocks")
+                            + "\nPhase: " + section.getString("phase")
                         );
-                    }
+                    } else sendInfo(player, "\"player\" argument required. (/ob user <player>)");
                 }
             }
             case "visit" -> visit(player, args[1]);
@@ -451,16 +464,15 @@ public class OneblockCommands implements CommandExecutor {
         Logger log = plugin.getLogger();
 
         // Send warnings if ChatColor options aren't valid
-        List<String> chatColors = List.of("help.header-color", "help.cmd-color", "help.msg-color", "mod-help.header-color", "mod-help.cmd-color", "mod-help.msg-color");
-        List<String> chatColorNames = List.of("Help menu's header", "Help menu's command", "Help menu's message", "Mod help's header", "Mod help's command", "Mod help's message");
+        List<String> chatColors = List.of("help.header-color", "help.cmd-color", "help.msg-color", "mod-help.header-color", "mod-help.cmd-color", "mod-help.msg-color"),
+        chatColorNames = List.of("Help menu's header", "Help menu's command", "Help menu's message", "Mod help's header", "Mod help's command", "Mod help's message");
         for (int i = 0; i < chatColors.size(); i++) if (!Arrays.stream(ChatColor.values()).anyMatch(ChatColor.valueOf(config.getString(chatColors.get(i)).toUpperCase())::equals)) log.warning(chatColorNames.get(i).concat(" color is invalid."));
 
         // Prefill the help message with the header
         String helpMessage = ChatColor.valueOf(config.getString("help.header-color").toUpperCase()) + config.getString("help.header") + "\n";
 
         // Get the commands and messages as a list
-        List<String> cmds = config.getStringList("help.cmds");
-        List<String> msgs = config.getStringList("help.msgs");
+        List<String> cmds = config.getStringList("help.cmds"), msgs = config.getStringList("help.msgs");
 
         // Dynamically build help message with custom colors and strings
         for (int i = 0; i < cmds.size(); i++) helpMessage += ChatColor.valueOf(config.getString("help.cmd-color").toUpperCase()) + "/oneblock " + cmds.get(i) + ChatColor.valueOf(config.getString("help.msg-color").toUpperCase()) + " - " + msgs.get(i) + "\n";
@@ -482,17 +494,16 @@ public class OneblockCommands implements CommandExecutor {
         sendMessage(player, helpMessage);
     }
 
-    private void setLocation(String[] args, Player player, String base) {
-        // home or spawn (visitor spawn)
-        String sethome = args[0].toLowerCase().equals("sethome") ? "home" : "spawn";
+    private void setLocation(String[] args, Player player, String base, boolean home) {
 
         // Make sure perms exist
-        if (checkPerms(player, sethome.equals("home") ? "home" : "visitor") && hasIsland(player)) {
+        if (checkPerms(player, home ? "home" : "visitor") && hasIsland(player)) {
             // Location variables
             double x, y, z;
             float yaw, pitch;
 
             // If its "x,y,z", "x,y,z,yaw,pitch", or just the current location
+            String sethome = home ? "home" : "spawn";
             if (Math.abs(args.length - 5) == 1) {
                 // Get x, y, and z
                 x = Double.parseDouble(args[1]);
@@ -518,22 +529,22 @@ public class OneblockCommands implements CommandExecutor {
             }
 
             // Set values
-            base += sethome.concat(".");
-            config.set(base.concat("x"), x);
-            config.set(base.concat("y"), y);
-            config.set(base.concat("z"), z);
-            config.set(base.concat("yaw"), yaw);
-            config.set(base.concat("pitch"), pitch);
+            ConfigurationSection section = config.getConfigurationSection(base + sethome);
+            section.set("x", x);
+            section.set("y", y);
+            section.set("z", z);
+            section.set("yaw", yaw);
+            section.set("pitch", pitch);
 
             // Save
             plugin.saveConfig();
 
             // Completion message
-            sendInfo(player, "Set " + sethome + " location.");
+            sendInfo(player, (home ? "Home" : "Visitor Spawn") + " location has been set.");
         }
     }
 
-    private void trust(String[] args, Player player, String base) {
+    private void trust(String[] args, Player player, String base, boolean trust) {
         // Make sure trust perm exists
         if (checkPerms(player, "trust") && hasIsland(player)) {
             // Make sure the player argument exists
@@ -541,7 +552,6 @@ public class OneblockCommands implements CommandExecutor {
             else {
                 // If to change all the users or just one
                 List<String> trusted = config.getStringList(base.concat("trusted"));
-                Boolean trust = args[0].toLowerCase().equals("trust");
                 if (args[1].toLowerCase().equals("all")) {
                     if (trust) trusted.add("*");
                     else trusted = new ArrayList<>();
