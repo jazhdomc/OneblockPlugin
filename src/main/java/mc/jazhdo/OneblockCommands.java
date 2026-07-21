@@ -35,7 +35,7 @@ public class OneblockCommands implements CommandExecutor {
         config = plugin.getConfig();
     }
 
-    private List<TpRequest> tpRequests;
+    private List<TpRequest> tpRequests = new ArrayList<>();
 
     @Override
     // @SuppressWarnings("deprecation")
