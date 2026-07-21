@@ -171,7 +171,10 @@ public class OneblockListener implements Listener {
             } 
 
             // Statistics
-            player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
+            try {
+                player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
+            } catch (IllegalArgumentException e) {}
+
 
             // Exhaustion from mining
             player.setExhaustion(player.getExhaustion() + 0.005f);
