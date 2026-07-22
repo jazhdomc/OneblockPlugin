@@ -9,9 +9,6 @@ island-spacing: 1000
 # The index of the next oneblock (Changing this without knowing how it works will probably break the selection system)
 next-island-index: 0
 
-# The message displayed when players teleport to their oneblock home
-oneblock-home-msg: Teleporting you to your oneblock home...
-
 # The message displayed when teleporting to someone's oneblock (%p is the playername who's oneblock the teleportation is to)
 oneblock-visit-msg: Teleporting to %p's oneblock...
 
@@ -262,7 +259,7 @@ phase-blocks:
     - SMOOTH_BRICK:0
     - MOSSY_COBBLESTONE:0
     - COBBLESTONE:0
-    - IRON_BARS:0
+    - IRON_FENCE:0
     - WOODEN_DOOR:0
     - IRON_DOOR:0
     - IRON_TRAPDOOR:0
@@ -285,15 +282,15 @@ phase-blocks:
     - WOOL:0
     - TORCH:0
     - HAY_BLOCK:0
-    - CRAFTING_TABLE:0
+    - WORKBENCH:0
     - FURNACE:0
     - IRON_BLOCK:0
     - GOLD_BLOCK:0
     - DIAMOND_BLOCK:0
     - CHEST,IRON_INGOT:0:16,GOLD_INGOT:0:8,DIAMOND:0:4,EMERALD:0:2,COOKED_BEEF:0:8
     - CHEST,IRON_PICKAXE:0:1,IRON_AXE:0:1,IRON_SWORD:0:1,TORCH:0:16
-    - CHEST,BREAD:0:16,COOKED_CHICKEN:0:8,COOKED_PORKCHOP:0:8
-    - CHEST,SADDLE:0:1,NAME_TAG:0:1,LEAD:0:2,IRON_INGOT:0:8
+    - CHEST,BREAD:0:16,COOKED_CHICKEN:0:8,GRILLED_PORK:0:8
+    - CHEST,SADDLE:0:1,NAME_TAG:0:1,LEASH:0:2,IRON_INGOT:0:8
 
   end:
     - END_STONE:0

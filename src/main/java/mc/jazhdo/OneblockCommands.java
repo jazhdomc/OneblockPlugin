@@ -3,6 +3,7 @@ package mc.jazhdo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -36,7 +37,7 @@ public class OneblockCommands implements CommandExecutor {
         config = plugin.getConfig();
     }
 
-    private List<TpRequest> tpRequests = new ArrayList<>();
+    private final List<TpRequest> tpRequests = new ArrayList<>();
 
     @Override
     // @SuppressWarnings("deprecation")
@@ -57,15 +58,17 @@ public class OneblockCommands implements CommandExecutor {
 
         // Do the right stuff based on the subcommand
         Logger logger = plugin.getLogger();
-        String base = "islands.".concat(player.getName().toLowerCase()).concat(".");
+        String base = "islands." + player.getName().toLowerCase() + ".";
         switch (args[0].toLowerCase()) {
             case "gamemode" -> {
-                if (checkPerms(player, "gamemode")) {
+                if (checkPerms(player, "mod")) {
                     // Check if the "player" argument is added
-                    if (args.length > 1) player = Bukkit.getPlayer(args[1]);
+                    Player playerArg = null;
+                    if (args.length > 1) playerArg = Bukkit.getPlayer(args[1]);
+                    if (playerArg != null) player = playerArg;
 
                     // Set player to spectator if in survival & is a mod, else default to survival
-                    if (player.getGameMode().equals(GameMode.SURVIVAL) && player.hasPermission("gamemode")) player.setGameMode(GameMode.SPECTATOR);
+                    if (player.getGameMode().equals(GameMode.SURVIVAL) && player.hasPermission("mod")) player.setGameMode(GameMode.SPECTATOR);
                     else player.setGameMode(GameMode.SURVIVAL);
                 }
             }
@@ -93,12 +96,12 @@ public class OneblockCommands implements CommandExecutor {
                         double x = loc.getX(), y = loc.getY(), z = loc.getZ();
 
                         // Set config values
-                        config.set(base + "x", x/islandSpacing);
-                        ConfigurationSection section = config.getConfigurationSection(base);
-                        section.set("z", z/islandSpacing);
-                        homeX = x;
+                        ConfigurationSection section = config.createSection(base.substring(0, base.length() - 1));
+                        section.set("x", (int) x / islandSpacing);
+                        section.set("z", (int) z / islandSpacing);
+                        homeX = x + 0.5;
                         homeY = y + 1;
-                        homeZ = z;
+                        homeZ = z + 0.5;
                         yaw = config.getDouble("default-home-yaw");
                         pitch = config.getDouble("default-home-pitch");
                         section.set("home.y", homeY);
@@ -125,13 +128,26 @@ public class OneblockCommands implements CommandExecutor {
                         Location oneblock = new Location(oneblockWorld, x, y, z);
                         Block oneblockBlock = oneblock.getBlock();
                         if (!starter.isEmpty()) {
-                            String[] parts = starter.get(0).split(":");
-                            if (parts.length != 0) {
-                                Material material = Material.getMaterial(parts[0]);
-                                if (material == null) logger.warning("Material name ".concat(parts[0]).concat(" is invalid."));
-                                oneblockBlock.setType(material);
-                                if (parts.length > 1) oneblockBlock.setData(Byte.parseByte(parts[1]));
-                            } else logger.warning("The first block of the starter selection is invalid.");
+                            String firstBlock = starter.get(0);
+                            String[] parts = firstBlock.split(":");
+                            if (parts.length == 1) {
+                                logger.log(Level.WARNING, "The first block ({0}) of the starter selection is invalid. Defaulting to grass.", firstBlock);
+                                parts = new String[]{"GRASS", "0"};
+                            }
+                            Material material = Material.getMaterial(parts[0]);
+                            if (material == null) {
+                                logger.log(Level.WARNING, "The first block's material name {0} is invalid. Defaulting to grass.", parts[0]);
+                                material = Material.GRASS;
+                            }
+                            oneblockBlock.setType(material);
+                            byte byteData;
+                            try {
+                                byteData = Byte.parseByte(parts[1]);
+                            } catch (NumberFormatException e) {
+                                logger.log(Level.WARNING, "The first block's data value {0} is invalid. Defaulting to 0.", parts[1]);
+                                byteData = 0;
+                            }
+                            if (parts.length > 1) oneblockBlock.setData(byteData);
                         } else listener.replaceBlock(oneblockBlock, player);
 
                         // Create safety block
@@ -139,25 +155,27 @@ public class OneblockCommands implements CommandExecutor {
                         safetyBlock.getBlock().setType(Material.OBSIDIAN);
                     } else {
                         // Get home values if not setting them by creating a island
-                        homeX = config.getDouble(base.concat("home.x"));
-                        homeY = config.getDouble(base.concat("home.y"));
-                        homeZ = config.getDouble(base.concat("home.z"));
-                        yaw = config.getDouble(base.concat("home.yaw"));
-                        pitch = config.getDouble(base.concat("home.pitch"));
+                        ConfigurationSection section = config.getConfigurationSection(base + "home");
+                        homeX = section.getDouble("x");
+                        homeY = section.getDouble("y");
+                        homeZ = section.getDouble("z");
+                        yaw = section.getDouble("yaw");
+                        pitch = section.getDouble("pitch");
                     }
 
                     // Teleport player to their home
-                    sendInfo(player, config.getString("oneblock-home-msg"));
+                    sendInfo(player, "Teleporting you to your oneblock home...");
                     player.teleport(new Location(oneblockWorld, homeX, homeY, homeZ, (float) yaw, (float) pitch));
                 }
             }
             case "list" -> {
                 if (checkPerms(player, "mod")) {
                     List<Player> playerList = Bukkit.getWorld(config.getString("oneblock-world")).getPlayers();
-                    String listMsg = config.getString("oneblock-list-header");
+                    String listMsg = ChatColor.YELLOW + config.getString("oneblock-list-header");
                     for (Player i : playerList) {
-                        String playerIsland = "islands.".concat(i.getName().toLowerCase()).concat(".");
-                        listMsg += "\n".concat(player.getName()).concat(" - x: ").concat(config.getString(playerIsland.concat("x"))).concat(" z: ").concat(config.getString(playerIsland.concat("z")));
+                        String playerName = i.getName();
+                        ConfigurationSection section = config.getConfigurationSection("islands." + playerName.toLowerCase());
+                        listMsg += "\n" + playerName + " - x: " + section.getString("x") + " z: " + section.getString("z");
                     }
                     sendMessage(player, listMsg);
                 }
@@ -172,7 +190,7 @@ public class OneblockCommands implements CommandExecutor {
                         List<String> materials = config.getStringList("perm-menu.blocks"), names = config.getStringList("perm-menu.names"), descriptions = config.getStringList("perm-menu.descriptions"), currentPerms = config.getStringList(base + args[1] + "-perms");
                         for (int i = 0; i < materials.size(); i++) {
                             // Create item
-                            ItemStack item = new ItemStack(Material.valueOf(materials.get(i).toUpperCase()));
+                            ItemStack item = new ItemStack(Material.getMaterial(materials.get(i).toUpperCase()));
 
                             // Set metadata (display name and description (lore))
                             ItemMeta meta = item.getItemMeta();
@@ -287,7 +305,10 @@ public class OneblockCommands implements CommandExecutor {
                 if (checkPerms(player, "phase") && hasIsland(player)) sendInfo(player, config.getString("phasecount-msg").replace("%p", config.getString(base.concat("phase"))).replace("%c", config.getString(base.concat("blocks"))));
             }
             case "reload" -> {
-                if (checkPerms(player, "mod")) plugin.reloadConfig();
+                if (checkPerms(player, "mod")) {
+                    plugin.reloadConfig();
+                    listener.generatePhaseBlocks();
+                }
             }
             case "reset" -> {
                 if (checkPerms(player, "reset") && hasIsland(player)) {
@@ -323,9 +344,9 @@ public class OneblockCommands implements CommandExecutor {
                     // Set values
                     ConfigurationSection section = config.getConfigurationSection(base + "home");
                     double islandSpacing = config.getInt("island-spacing");
-                    section.set("x", config.getDouble(base.concat("x")) * islandSpacing);
+                    section.set("x", (config.getDouble(base + "x") * islandSpacing) + 0.5);
                     section.set("y", config.getDouble("oneblock-y") + 1);
-                    section.set("z", config.getDouble(base.concat("z")) * islandSpacing);
+                    section.set("z", (config.getDouble(base + "z") * islandSpacing) + 0.5);
                     section.set("yaw", config.getDouble("default-home-yaw"));
                     section.set("pitch", config.getDouble("default-home-pitch"));
 
@@ -402,7 +423,7 @@ public class OneblockCommands implements CommandExecutor {
             case "trust" -> trust(args, player, base, true);
             case "trustlist" -> {
                 if (checkPerms(player, "trust") && hasIsland(player)) {
-                    List<String> trustList = config.getStringList(base.concat("trusted"));
+                    List<String> trustList = config.getStringList(base + "trusted");
                     String trustListMsg = ChatColor.YELLOW + config.getString("trusted-list-header") + ChatColor.WHITE;
                     for (int i = 0; i < trustList.size(); i++) trustListMsg += "\n" + Integer.toString(i + 1) + ". " + trustList.get(i);
                     sendMessage(player, trustListMsg);
@@ -495,7 +516,6 @@ public class OneblockCommands implements CommandExecutor {
     }
 
     private void setLocation(String[] args, Player player, String base, boolean home) {
-
         // Make sure perms exist
         if (checkPerms(player, home ? "home" : "visitor") && hasIsland(player)) {
             // Location variables
@@ -551,7 +571,7 @@ public class OneblockCommands implements CommandExecutor {
             if (args.length < 2) sendMessage(player, "\"player\" argument required");
             else {
                 // If to change all the users or just one
-                List<String> trusted = config.getStringList(base.concat("trusted"));
+                List<String> trusted = config.getStringList(base + "trusted");
                 if (args[1].toLowerCase().equals("all")) {
                     if (trust) trusted.add("*");
                     else trusted = new ArrayList<>();
@@ -561,7 +581,7 @@ public class OneblockCommands implements CommandExecutor {
                 }
                 
                 // Set changed list
-                config.set(base.concat("trusted"), trusted);
+                config.set(base + "trusted", trusted);
 
                 // Save
                 plugin.saveConfig();
@@ -577,20 +597,18 @@ public class OneblockCommands implements CommandExecutor {
         if (checkPerms(player, "visitor")) {
             // Make sure island exists
             if (config.contains("islands." + target.toLowerCase())) {
-                // Get base string for simpler use
-                String base = "islands.".concat(target.toLowerCase()).concat(".spawn.");
-
                 // Tell player about the teleportation
                 sendInfo(player, config.getString("oneblock-visit-msg").replace("%p", target));
 
                 // Teleport player
+                ConfigurationSection section = config.getConfigurationSection("islands." + target.toLowerCase() + ".spawn");
                 player.teleport(new Location(
                     Bukkit.getWorld(config.getString("oneblock-world")),
-                    config.getDouble(base.concat("x")),
-                    config.getDouble(base.concat("y")),
-                    config.getDouble(base.concat("z")),
-                    (float) config.getDouble(base.concat("yaw")),
-                    (float) config.getDouble(base.concat("pitch")))
+                    section.getDouble("x"),
+                    section.getDouble("y"),
+                    section.getDouble("z"),
+                    (float) section.getDouble("yaw"),
+                    (float) section.getDouble("pitch"))
                 );
             } else sendInfo(player, "Island not found.");
         }

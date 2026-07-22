@@ -1,5 +1,5 @@
 name: OneblockPlugin
-version: 0.1.13
+version: 0.1.14
 description: The plugin used in the oneblock server of JazhdoMC.
 author: jazhdo
 main: mc.jazhdo.OneblockPlugin
@@ -14,9 +14,6 @@ commands:
     aliases: [ob, 1b]
 
 permissions:
-  oneblock.gamemode:
-    description: Toggle the gamemode of players with oneblock.gamemode or reset gamemodes of everybody else
-    default: false
   oneblock.guide:
     description: Guide for how to play oneblock
     default: true

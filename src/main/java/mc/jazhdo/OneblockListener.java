@@ -1,8 +1,11 @@
 package mc.jazhdo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -14,6 +17,7 @@ import org.bukkit.Statistic;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ExperienceOrb;
@@ -23,18 +27,104 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class OneblockListener implements Listener {
+public final class OneblockListener implements Listener {
     private final OneblockPlugin plugin;
     private final FileConfiguration config;
     private final Logger log;
+    private Map<String, List<OneblockBlock>> phaseBlocks = null;
 
     public OneblockListener(OneblockPlugin plugin) {
         this.plugin = plugin;
         config = plugin.getConfig();
         log = plugin.getLogger();
+        generatePhaseBlocks();
+    }
+
+    public void generatePhaseBlocks() {
+        // Set to null for any block mines before done
+        this.phaseBlocks = null;
+
+        // Make sure the configuration section of phase-blocks exists
+        if (!config.contains("phase-blocks")) {
+            log.log(Level.SEVERE, "Configuration section \"phase-blocks\" not found. Oneblock block replacement will not work.");
+            return;
+        }
+
+        // Go through the phases and build each phase's block list
+        Map<String, List<OneblockBlock>> tempPhaseBlocks = new HashMap<>();
+        ConfigurationSection phaseBlocksConfig = config.getConfigurationSection("phase-blocks");
+        for (String phase : phaseBlocksConfig.getKeys(false)) {
+            // Get and verify phase's blocks
+            List<String> blocks = phaseBlocksConfig.getStringList(phase);
+            if (blocks.isEmpty()) log.log(Level.WARNING, "Error getting phase \"{0}\"'s blocks.", phase);
+
+            // Build list of blocks
+            List<OneblockBlock> blockList = new ArrayList<>();
+            for (String block : blocks) {
+                // If a chest is to be made
+                if (block.toUpperCase().startsWith("CHEST")) {
+                    // Replace block into a chest and get chest
+                    List<ItemStack> chestItemsList = new ArrayList<>();
+
+                    // Remove the first item because that's "CHEST"
+                    String[] originalItems = block.split(",");
+                    String[] chestItems = new String[originalItems.length - 1];
+                    System.arraycopy(originalItems, 1, chestItems, 0, chestItems.length);
+
+                    // Go through each item's string and create and add it
+                    for (String chestItem : chestItems) {
+                        // Get the three parts
+                        String[] parts = chestItem.split(":");
+
+                        // Get Material object from name
+                        Material material = Material.getMaterial(parts[0]);
+
+                        // In case material is incorrect
+                        if (material == null) {
+                            log.log(Level.WARNING, "Phase {0} chest material name {1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                            material = Material.GRASS;
+                        }
+
+                        // Create item
+                        ItemStack item = new ItemStack(material, parts.length > 2 ? Integer.parseInt(parts[2]) : 1);
+
+                        // Set item metadata
+                        item.setDurability(parts.length > 1 ? Short.parseShort(parts[1]) : 0);
+
+                        // Add item into chest
+                        chestItemsList.add(item);
+                    }
+
+                    // Add item
+                    blockList.add(new OneblockBlock(chestItemsList));
+                } else {
+                    // Get the two parts
+                    String[] parts = block.split(":");
+
+                    // Get Material object from name
+                    Material material = Material.getMaterial(parts[0]);
+
+                    // In case material is incorrect
+                    if (material == null) {
+                        log.log(Level.WARNING, "Phase {0} block material name {1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                        material = Material.GRASS;
+                    }
+
+                    // Add block
+                    blockList.add(new OneblockBlock(material.getId(), (parts.length > 1) ? Byte.parseByte(parts[1]) : 0));
+                }
+            }
+
+            // Add phase and its coresponding blocks to the big list
+            tempPhaseBlocks.put(phase, blockList);
+        }
+
+        // Set all the changes to the real blocks list
+        this.phaseBlocks = tempPhaseBlocks;
     }
 
     @EventHandler
@@ -147,6 +237,7 @@ public class OneblockListener implements Listener {
             event.setCancelled(true);
 
             // Update block count
+            // TODO: Make this based on the island and not the player (make a new helper public func from the existing func)
             Player player = event.getPlayer();
             String base = "islands.".concat(player.getName().toLowerCase());
             int blockCount = config.getInt(base.concat(".blocks")) + 1;
@@ -175,7 +266,6 @@ public class OneblockListener implements Listener {
                 player.incrementStatistic(Statistic.MINE_BLOCK, broken.getType(), 1);
             } catch (IllegalArgumentException e) {}
 
-
             // Exhaustion from mining
             player.setExhaustion(player.getExhaustion() + 0.005f);
 
@@ -185,7 +275,7 @@ public class OneblockListener implements Listener {
                 String[] parts = starter.get(blockCount).split(":");
                 Material material = Material.getMaterial(parts[0]);
                 if (material == null) {
-                    log.warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
+                    log.log(Level.WARNING, "Starter block #{0} material name {1} is invalid. Defaulting to grass.", new String[]{Integer.toString(blockCount), parts[0]});
                     material = Material.GRASS;
                 }
                 broken.setType(material);
@@ -218,69 +308,31 @@ public class OneblockListener implements Listener {
 
     // @SuppressWarnings("deprecation")
     public void replaceBlock(Block replace, Player player) {
-        // Get a random block
-        OneblockCommands cmds = plugin.getCommands();
+        // Get player location
+        Location originalLoc = player.getLocation();
+        int oneblockY = config.getInt("oneblock-y");
+        if (originalLoc.getBlockY() == oneblockY) originalLoc.setY(oneblockY + 1);
+
+        // Get phase
+        // TODO: Make this based on the island and not the player (make a new helper public func from the existing func)
         String playerPhase = config.getString("islands." + player.getName().toLowerCase() + ".phase");
         if (playerPhase == null) {
-            cmds.sendInfo(player, ChatColor.RED + "Error fetching your phase / island. Make sure you have a island and contact staff for help. Defaulting to plains phase.");
+            plugin.getCommands().sendInfo(player, ChatColor.RED + "Error fetching your phase / island. Make sure you have a island and contact staff for help. Defaulting to plains phase.");
             playerPhase = "plains";
         }
-        List<String> blocks = config.getStringList("phase-blocks." + playerPhase);
-        String block;
-        if (blocks.isEmpty()) {
-            cmds.sendInfo(player, ChatColor.RED + "Error fetching your phase's blocks. Contact staff for help. Defaulting to grass block.");
-            block = "grass";
-        } else block = blocks.get((int) (Math.random() * blocks.size()));
 
-        // If a chest is to be made
-        if (block.toLowerCase().startsWith("chest")) {
-            // Replace block into a chest and get chest
+        // Replace block
+        List<OneblockBlock> phaseList = phaseBlocks.get(playerPhase);
+        OneblockBlock randomizedBlock = phaseList.get((int) (Math.random() * phaseList.size()));
+        if (randomizedBlock.hasItems()) {
             replace.setType(Material.CHEST);
             Chest chest = (Chest) replace.getState();
-
-            // Loop through all the items and add each one (skip item 0 because that is the string "chest")
-            String[] chestItems = block.split(",");
-            for (int i = 1; i < chestItems.length; i++) {
-                // Get the three parts
-                String[] parts = chestItems[i].split(":");
-
-                // Get Material object from name
-                Material material = Material.getMaterial(parts[0]);
-
-                // In case material is incorrect
-                if (material == null) {
-                    log.warning("Chest material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
-                    material = Material.GRASS;
-                }
-
-                // Create item
-                ItemStack item = new ItemStack(material, parts.length > 2 ? Integer.parseInt(parts[2]) : 1);
-
-                // Set item metadata
-                item.setDurability(parts.length > 1 ? Short.parseShort(parts[1]) : 0);
-
-                // Add item into chest
-                chest.getBlockInventory().addItem(item);
-            }
+            Inventory chestInventory = chest.getBlockInventory();
+            for (ItemStack item : randomizedBlock.getItems()) chestInventory.addItem(item);
             chest.update();
-        } else {
-            // Get the two parts
-            String[] parts = block.split(":");
-
-            // Get Material object from name
-            Material material = Material.getMaterial(parts[0]);
-
-            // In case material is incorrect
-            if (material == null) {
-                log.warning("Material name ".concat(parts[0]).concat(" is invalid. Defaulting to grass."));
-                material = Material.GRASS;
-            }
-
-            // Replace block
-            replace.setType(material);
-
-            // Set item metadata
-            replace.setData((parts.length > 1) ? Byte.parseByte(parts[1]) : 0);
-        }
+        } else replace.setTypeIdAndData(randomizedBlock.getId(), randomizedBlock.getData(), true);
+        
+        // Teleport player to the right location
+        player.teleport(originalLoc);
     }
 }
