@@ -329,7 +329,7 @@ public final class OneblockListener implements Listener {
             Chest chest = (Chest) replace.getState();
             Inventory chestInventory = chest.getBlockInventory();
             for (ItemStack item : randomizedBlock.getItems()) chestInventory.addItem(item);
-            chest.update();
+            chest.update(true, false);
         } else replace.setTypeIdAndData(randomizedBlock.getId(), randomizedBlock.getData(), true);
         
         // Teleport player to the right location
