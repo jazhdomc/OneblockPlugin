@@ -170,8 +170,16 @@ public class OneblockCommands implements CommandExecutor {
             }
             case "list" -> {
                 if (checkPerms(player, "mod")) {
+                    ConfigurationSection list = config.getConfigurationSection("islands");
+                    String listMsg = ChatColor.YELLOW + "=== Oneblock Island List ===" + ChatColor.WHITE;
+                    for (String key : list.getKeys(false)) listMsg += "\n" + key + " - x: " + list.getString(key + ".x") + " - z: " + list.getString(key + ".z");
+                    sendMessage(player, listMsg);
+                }
+            }
+            case "playerlist" -> {
+                if (checkPerms(player, "mod")) {
                     List<Player> playerList = Bukkit.getWorld(config.getString("oneblock-world")).getPlayers();
-                    String listMsg = ChatColor.YELLOW + config.getString("oneblock-list-header");
+                    String listMsg = ChatColor.YELLOW + "=== Oneblock Player List ===" + ChatColor.WHITE;
                     for (Player i : playerList) {
                         String playerName = i.getName();
                         ConfigurationSection section = config.getConfigurationSection("islands." + playerName.toLowerCase());
@@ -301,8 +309,19 @@ public class OneblockCommands implements CommandExecutor {
                 //     player.openInventory(phaseUI);
                 // }
             }
-            case "phasecount" -> {
-                if (checkPerms(player, "phase") && hasIsland(player)) sendInfo(player, config.getString("phasecount-msg").replace("%p", config.getString(base.concat("phase"))).replace("%c", config.getString(base.concat("blocks"))));
+            case "count" -> {
+                if (checkPerms(player, "phase") && hasIsland(player)) {
+                    ConfigurationSection section = config.getConfigurationSection(base.substring(0, base.length() - 1));
+                    String phase = section.getString("phase"), blockCount = section.getString("blocks");
+                    int phaseIndex = (new ArrayList<>(config.getConfigurationSection("phase-blocks").getKeys(false))).indexOf(phase), blockCountInt = Integer.parseInt(blockCount);
+                    List<Integer> phaseLength = config.getIntegerList("phase-length");
+                    sendInfo(player,
+                        "Blocks Since Last Phase: " + Integer.toString(blockCountInt - (phaseIndex == 0 ? 0 : phaseLength.get(phaseIndex - 1)))
+                        + "\nCurrent Phase: " + phase
+                        + "\nBlock Count: " + blockCount
+                        + "\nBlocks Until Next Phase: " + Integer.toString(phaseLength.get(phaseIndex + 1) - blockCountInt)
+                    );
+                }
             }
             case "reload" -> {
                 if (checkPerms(player, "mod")) {
@@ -397,7 +416,7 @@ public class OneblockCommands implements CommandExecutor {
                     if (args.length > 1) {
                         // Make sure the player teleporting to is online
                         Player to = Bukkit.getPlayer(args[1]);
-                        if (to == null) sendInfo(player, ChatColor.RED + "Player " + args[1] + " was not found. Make sure they are online.");
+                        if (to == null) sendInfo(player, ChatColor.RED + "Could not find player  " + args[1] + ". Make sure they are online.");
                         else {
                             // Create new request
                             TpRequest request = new TpRequest(player.getName(), args[1]);
@@ -477,7 +496,7 @@ public class OneblockCommands implements CommandExecutor {
     }
     
     private void sendMessage(Player player, String msg) {
-        player.spigot().sendMessage(new TextComponent(msg));
+        player.spigot().sendMessage(TextComponent.fromLegacyText(msg));
     }
     
     private void sendHelp(Player player) {

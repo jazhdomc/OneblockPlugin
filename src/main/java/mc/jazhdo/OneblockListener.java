@@ -44,6 +44,19 @@ public final class OneblockListener implements Listener {
         generatePhaseBlocks();
     }
 
+    private String list2string(List<String> list) {
+        String output = "[";
+        for (int i = 0; i < list.size(); i++) {
+            output += list.get(i);
+            if (list.size() - 1 != i) output += ", ";
+        }
+        return output + "]";
+    }
+
+    private String list2string(String[] list) {
+        return list2string(List.of(list));
+    }
+
     public void generatePhaseBlocks() {
         // Set to null for any block mines before done
         this.phaseBlocks = null;
@@ -65,9 +78,9 @@ public final class OneblockListener implements Listener {
             // Build list of blocks
             List<OneblockBlock> blockList = new ArrayList<>();
             for (String block : blocks) {
-                // If a chest is to be made
+                // Find what type of block is to be made
                 if (block.toUpperCase().startsWith("CHEST")) {
-                    // Replace block into a chest and get chest
+                    // Create list
                     List<ItemStack> chestItemsList = new ArrayList<>();
 
                     // Remove the first item because that's "CHEST"
@@ -83,9 +96,13 @@ public final class OneblockListener implements Listener {
                         // Get Material object from name
                         Material material = Material.getMaterial(parts[0]);
 
-                        // In case material is incorrect
+                        // Validate material name and status as a item
                         if (material == null) {
-                            log.log(Level.WARNING, "Phase {0} chest material name {1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                            log.log(Level.WARNING, "Phase {0} chest Material.{1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                            material = Material.GRASS;
+                        }
+                        if (!material.isItem()) {
+                            log.log(Level.WARNING, "Phase {0} chest Material.{1} is not a item. Defaulting to grass.", new String[]{phase, parts[0]});
                             material = Material.GRASS;
                         }
 
@@ -100,7 +117,87 @@ public final class OneblockListener implements Listener {
                     }
 
                     // Add item
-                    blockList.add(new OneblockBlock(chestItemsList));
+                    blockList.add(new NormalChest(chestItemsList));
+                } else if (block.toUpperCase().startsWith("LOOT")) {
+                    String[] parts = block.split(",");
+                    String[] itemsRangeString = parts[0].split(":")[1].split("-");
+                    int itemsRangeMin, itemsRangeMax;
+                    if (itemsRangeString.length < 2) {
+                        log.log(Level.WARNING, "Phase {0} loot chest min/max items list ({1}) is too short. Defaulting to 2 to 4 items.", new String[]{phase, list2string(itemsRangeString)});
+                        itemsRangeMin = 2;
+                        itemsRangeMax = 4;
+                    } else {
+                        try {
+                            itemsRangeMin = Integer.parseInt(itemsRangeString[0]);
+                            itemsRangeMax = Integer.parseInt(itemsRangeString[1]);
+                        } catch (NumberFormatException e) {
+                            log.log(Level.WARNING, "Phase {0} loot chest items range string list ({1}) has a invalid number (Error: {2}). Defaulting to 2 to 4 items.", new String[]{phase, list2string(itemsRangeString), e.getMessage()});
+                            itemsRangeMin = 2;
+                            itemsRangeMax = 4;
+                        }
+                    }
+                    List<LootItem> items = new ArrayList<>();
+                    for (int i = 1; i < parts.length; i++) {
+                        // Get and validate parts
+                        String[] subParts = parts[i].split(":");
+                        if (subParts.length < 4) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} with data {2} is invalid for not having all four required parts: MATERIAL:DATA:RANGE:WEIGHT. Skipping item", new String[]{phase, Integer.toString(i), list2string(subParts)});
+                            continue;
+                        }
+
+                        // Get and validate material
+                        Material material = Material.getMaterial(subParts[0]);
+                        if (material == null) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2} is invalid. Defaulting to grass.", new String[]{phase, Integer.toString(i), subParts[0]});
+                            material = Material.GRASS;
+                        }
+                        if (!material.isItem()) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2} is not a item. Defaulting to grass.", new String[]{phase, Integer.toString(i), subParts[0]});
+                            material = Material.GRASS;
+                        }
+
+                        // Get and validate range
+                        String[] rangeString = subParts[2].split("-");
+                        int rangeMin, rangeMax;
+                        if (rangeString.length < 2) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2} range list is invalid ({3}). Defaulting to 2 to 4 items.", new String[]{phase, Integer.toString(i), subParts[0], list2string(rangeString)});
+                            rangeMin = 2;
+                            rangeMax = 4;
+                        } else {
+                            try {
+                                rangeMin = Integer.parseInt(rangeString[0]);
+                                rangeMax = Integer.parseInt(rangeString[1]);
+                            } catch (NumberFormatException e) {
+                                log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2} range string min {3} or max {4} is not a valid number (Error: {5}). Defaulting to 2 to 4 items.", new String[]{phase, Integer.toString(i), subParts[0], rangeString[0], rangeString[1], e.getMessage()});
+                                rangeMin = 2;
+                                rangeMax = 4;
+                            }
+                        }
+
+                        // Get and validate data
+                        short data;
+                        try {
+                            data = Short.parseShort(subParts[1]);
+                        } catch (NumberFormatException e) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2}'s data of \"{3}\" is not a number (Error: {4}). Defaulting to a data value of 0.", new String[]{phase, Integer.toString(i), subParts[0], subParts[1], e.getMessage()});
+                            data = 0;
+                        }
+
+                        // Get and validate weight
+                        int weight;
+                        try {
+                            weight = Integer.parseInt(subParts[3]);
+                        } catch (NumberFormatException e) {
+                            log.log(Level.WARNING, "Phase {0} loot chest item {1} Material.{2}'s weight of \"{3}\" is not a number (Error: {4}). Defaulting to a weight value of 1.", new String[]{phase, Integer.toString(i), subParts[0], subParts[3], e.getMessage()});
+                            weight = 1;
+                        }
+
+                        // Add the loot item
+                        for (int j = 0; j < weight; j++) items.add(new LootItem(material, data, rangeMin, rangeMax));
+                    }
+
+                    // Add chest and its data
+                    blockList.add(new LootChest(itemsRangeMin, itemsRangeMax, items));
                 } else {
                     // Get the two parts
                     String[] parts = block.split(":");
@@ -108,14 +205,18 @@ public final class OneblockListener implements Listener {
                     // Get Material object from name
                     Material material = Material.getMaterial(parts[0]);
 
-                    // In case material is incorrect
+                    // Validate material name and status as a block
                     if (material == null) {
-                        log.log(Level.WARNING, "Phase {0} block material name {1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                        log.log(Level.WARNING, "Phase {0} block Material.{1} is invalid. Defaulting to grass.", new String[]{phase, parts[0]});
+                        material = Material.GRASS;
+                    }
+                    if (!material.isBlock()) {
+                        log.log(Level.WARNING, "Phase {0} block Material.{1} is not a block. Defaulting to grass.", new String[]{phase, parts[0]});
                         material = Material.GRASS;
                     }
 
                     // Add block
-                    blockList.add(new OneblockBlock(material.getId(), (parts.length > 1) ? Byte.parseByte(parts[1]) : 0));
+                    blockList.add(new NormalBlock(material.getId(), (parts.length > 1) ? Byte.parseByte(parts[1]) : 0));
                 }
             }
 
@@ -301,7 +402,10 @@ public final class OneblockListener implements Listener {
                     }
                     total += phaseLength.get(i);
                 }
-                if (!phase.equals(config.getString(base.concat(".phase")))) config.set(base.concat(".phase"), phase);
+                if (!phase.equals(config.getString(base.concat(".phase")))) {
+                    config.set(base.concat(".phase"), phase);
+                    plugin.getCommands().sendInfo(player, ChatColor.GREEN + "New Phase: " + phase + ". Use the command \"/ob count\" to check block count.");
+                }
             }
         }
     }
@@ -311,7 +415,10 @@ public final class OneblockListener implements Listener {
         // Get player location
         Location originalLoc = player.getLocation();
         int oneblockY = config.getInt("oneblock-y");
-        if (originalLoc.getBlockY() == oneblockY) originalLoc.setY(oneblockY + 1);
+        double islandSpacing = config.getDouble("island-spacing"), originalLocX = originalLoc.getX(), originalLocZ = originalLoc.getZ();
+        if (((originalLocX >= 0 && originalLocX % islandSpacing < 1.3) || (originalLocX < 0 && originalLocX % islandSpacing > -0.3))
+        && ((originalLocZ >= 0 && originalLocZ % islandSpacing < 1.3) || (originalLocZ < 0 && originalLocZ % islandSpacing > -0.3))
+        && originalLoc.getBlockY() == oneblockY) originalLoc.setY(oneblockY + 1);
 
         // Get phase
         // TODO: Make this based on the island and not the player (make a new helper public func from the existing func)
@@ -324,15 +431,34 @@ public final class OneblockListener implements Listener {
         // Replace block
         List<OneblockBlock> phaseList = phaseBlocks.get(playerPhase);
         OneblockBlock randomizedBlock = phaseList.get((int) (Math.random() * phaseList.size()));
-        if (randomizedBlock.hasItems()) {
-            replace.setType(Material.CHEST);
-            Chest chest = (Chest) replace.getState();
-            Inventory chestInventory = chest.getBlockInventory();
-            for (ItemStack item : randomizedBlock.getItems()) chestInventory.addItem(item);
-            chest.update(true, false);
-        } else replace.setTypeIdAndData(randomizedBlock.getId(), randomizedBlock.getData(), true);
+        switch (randomizedBlock.getType()) {
+            case CHEST -> {
+                NormalChest chestBlock = (NormalChest) randomizedBlock;
+                replace.setType(Material.CHEST);
+                Chest chest = (Chest) replace.getState();
+                Inventory chestInventory = chest.getBlockInventory();
+                chestInventory.clear();
+                for (ItemStack item : chestBlock.getItems()) chestInventory.addItem(item);
+            }
+            case LOOT -> {
+                LootChest chestBlock = (LootChest) randomizedBlock;
+                replace.setType(Material.CHEST);
+                Chest chest = (Chest) replace.getState();
+                Inventory chestInventory = chest.getBlockInventory();
+                chestInventory.clear();
+                for (ItemStack item : chestBlock.getItems()) chestInventory.addItem(item);
+            }
+            default -> {
+                if (randomizedBlock.getType() != OneblockBlock.Types.BLOCK) log.log(Level.WARNING, "The randomized block's type ({0}) is not CHEST, BLOCK, or LOOT.", randomizedBlock.getType());
+                NormalBlock block = (NormalBlock) randomizedBlock;
+                replace.setTypeIdAndData(block.getId(), block.getData(), true);
+            }
+        }
         
         // Teleport player to the right location
+        Location newLocation = player.getLocation();
+        originalLoc.setYaw(newLocation.getYaw());
+        originalLoc.setPitch(newLocation.getPitch());
         player.teleport(originalLoc);
     }
 }
