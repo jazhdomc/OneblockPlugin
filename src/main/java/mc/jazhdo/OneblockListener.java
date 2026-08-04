@@ -35,10 +35,10 @@ public final class OneblockListener implements Listener {
     private final FileConfiguration config;
     private final Logger log;
     private Map<String, List<OneblockBlock>> phaseBlocks = null;
-    public List<NormalBlock> starterBlocks = null;
+    public List<NormalBlock> starterBlocks = new ArrayList<>();
     public World oneblockWorld;
     public int oneblockY;
-    public List<String> phases;
+    public List<String> phases = new ArrayList<>();
 
     public OneblockListener(OneblockPlugin plugin) {
         this.plugin = plugin;
