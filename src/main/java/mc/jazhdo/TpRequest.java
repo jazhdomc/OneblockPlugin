@@ -1,7 +1,6 @@
 package mc.jazhdo;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -36,7 +35,7 @@ public class TpRequest {
         task.cancel();
         Player fromPlayer = Bukkit.getPlayer(from);
         if (fromPlayer == null) return false;
-        fromPlayer.teleport((Entity) Bukkit.getPlayer(to));
+        fromPlayer.teleport(Bukkit.getPlayer(to));
         return true;
     }
 }

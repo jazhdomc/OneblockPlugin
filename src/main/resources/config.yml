@@ -6,14 +6,11 @@
 # The distance between each island (when subtracted)
 island-spacing: 1000
 
-# The index of the next oneblock (Changing this without knowing how it works will probably break the selection system)
-next-island-index: 0
-
 # The message displayed when teleporting to someone's oneblock (%p is the playername who's oneblock the teleportation is to)
 oneblock-visit-msg: Teleporting to %p's oneblock...
 
 # Oneblock reset warning displayed when doing reset without confirm
-oneblock-reset-warning: "Warning: Resetting your island is permenant. Do \"/oneblock reset confirm\" to confirm."
+oneblock-reset-warning: "Warning: Resetting your island is permenant and will lag the server out extremely for a bit. Do \"/oneblock reset confirm\" to confirm."
 
 # Player info (using the command /oneblock user <player>) header (%p for playername)
 oneblock-user-header: === Oneblock Player %p Info ===
@@ -1191,12 +1188,6 @@ phase-blocks:
 
 # Help message customization
 help:
-  # Header of the help menu
-  header: === Oneblock Help ===
-
-  # Color of the header in ChatColor. format
-  header-color: GOLD
-
   # Commands
   cmds:
     - guide
@@ -1217,9 +1208,6 @@ help:
     - untrust <player>|all
     - visit <player>
   
-  # Color of the commands in ChatColor. format
-  cmd-color: YELLOW
-
   # Messages corresponding to the commands
   msgs:
     - Shows a guide for how to play oneblock
@@ -1245,15 +1233,8 @@ help:
 
 # Mod help message customization
 mod-help:
-  # Header of the mod help menu
-  header: === Oneblock Mod Help ===
-
-  # Color of the header in ChatColor. format
-  header-color: GOLD
-
   # Commands
   cmds:
-    - gamemode [player]
     - list
     - playerlist
     - reload
@@ -1265,7 +1246,6 @@ mod-help:
 
   # Messages corresponding to the commands
   msgs:
-    - Changes between spectator gamemode and survival gamemode
     - Lists every single island's owner and location
     - Lists every online player's name and island location
     - Reloads the config (Has potential to reset current write operations)

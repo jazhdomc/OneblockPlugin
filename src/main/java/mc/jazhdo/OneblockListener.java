@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +35,10 @@ public final class OneblockListener implements Listener {
     private final FileConfiguration config;
     private final Logger log;
     private Map<String, List<OneblockBlock>> phaseBlocks = null;
+    public List<NormalBlock> starterBlocks = null;
+    public World oneblockWorld;
+    public int oneblockY;
+    public List<String> phases;
 
     public OneblockListener(OneblockPlugin plugin) {
         this.plugin = plugin;
@@ -44,6 +47,12 @@ public final class OneblockListener implements Listener {
         generatePhaseBlocks();
     }
 
+    /**
+     * Converts a list into a readable string format
+     * 
+     * @param list The list to convert
+     * @return The readable string
+     */
     private String list2string(List<String> list) {
         String output = "[";
         for (int i = 0; i < list.size(); i++) {
@@ -53,11 +62,25 @@ public final class OneblockListener implements Listener {
         return output + "]";
     }
 
+    /**
+     * A wrapper for list2string(List<String> list) but with a ordinary string list instead of a List<String>
+     * 
+     * @param list The list to convert
+     * @return The readable string 
+     */
     private String list2string(String[] list) {
         return list2string(List.of(list));
     }
 
+    /**
+     * A function to parse and load all the phases' blocks before any player mines them to save time and requests
+    */
     public void generatePhaseBlocks() {
+        // Preload all the variables after each config reload
+        phases = new ArrayList<>(config.getConfigurationSection("phase-blocks").getKeys(false));
+        oneblockWorld = Bukkit.getWorld(config.getString("oneblock-world"));
+        oneblockY = config.getInt("oneblock-y");
+        
         // Set to null for any block mines before done
         this.phaseBlocks = null;
 
@@ -84,8 +107,7 @@ public final class OneblockListener implements Listener {
                     List<ItemStack> chestItemsList = new ArrayList<>();
 
                     // Remove the first item because that's "CHEST"
-                    String[] originalItems = block.split(",");
-                    String[] chestItems = new String[originalItems.length - 1];
+                    String[] originalItems = block.split(","), chestItems = new String[originalItems.length - 1];
                     System.arraycopy(originalItems, 1, chestItems, 0, chestItems.length);
 
                     // Go through each item's string and create and add it
@@ -119,8 +141,7 @@ public final class OneblockListener implements Listener {
                     // Add item
                     blockList.add(new NormalChest(chestItemsList));
                 } else if (block.toUpperCase().startsWith("LOOT")) {
-                    String[] parts = block.split(",");
-                    String[] itemsRangeString = parts[0].split(":")[1].split("-");
+                    String[] parts = block.split(","), itemsRangeString = parts[0].split(":")[1].split("-");
                     int itemsRangeMin, itemsRangeMax;
                     if (itemsRangeString.length < 2) {
                         log.log(Level.WARNING, "Phase {0} loot chest min/max items list ({1}) is too short. Defaulting to 2 to 4 items.", new String[]{phase, list2string(itemsRangeString)});
@@ -226,75 +247,91 @@ public final class OneblockListener implements Listener {
 
         // Set all the changes to the real blocks list
         this.phaseBlocks = tempPhaseBlocks;
+
+        // Set to null to indicate loading
+        this.starterBlocks = null;
+
+        // Parse blocks and add them to the starter list
+        List<String> starter = config.getStringList("starter");
+        for (String block : starter) {
+            // Get the two parts of the block
+            String[] parts = block.split(":");
+
+            // Get and verify material
+            Material material = Material.getMaterial(parts[0].toUpperCase());
+            if (material == null) {
+                log.log(Level.WARNING, "Starter block material Material.{0} does not exist. Defaulting to grass. ({1})", new String[]{parts[0], block});
+                material = Material.GRASS;
+            }
+
+            // Get and verify data byte
+            short data;
+            if (parts.length < 2) data = 0;
+            else {
+                try {
+                    data = Short.parseShort(parts[1]);
+                } catch (NumberFormatException e) {
+                    log.log(Level.WARNING, "Starter block {0}'s data value of {1} is not a valid number. Defaulting to 0.", new String[]{block, parts[1]});
+                    data = 0;
+                }
+            }
+
+            // Add block
+            starterBlocks.add(new NormalBlock(material.getId(), (byte) data));
+        }
     }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        // Figure out which island is 0 0 else teleport them to their island respawn point
         Player player = event.getPlayer();
-        if (!config.contains("islands." + player.getName().toLowerCase())) {
-            Set<String> islands = config.getConfigurationSection("islands").getKeys(false);
-            Double playerX = 0d;
-            Double playerZ = 0d;
-            Double islandSpacing = config.getDouble("island-spacing");
-            Double islandSpacingHalf = islandSpacing/2;
-            String currentIsland = null;
-            for (String island : islands) {
-                String base = "islands.".concat(island).concat(".");
-                Double islandX = config.getDouble(base.concat("x")) * islandSpacing;
-                Double islandZ = config.getDouble(base.concat("z")) * islandSpacing;
-                if (playerX > islandX - islandSpacingHalf && playerZ > islandZ - islandSpacingHalf && playerX <= islandX + islandSpacingHalf && playerZ <= islandZ + islandSpacingHalf) {
-                    currentIsland = base.concat("spawn.");
-                    break;
-                }
-            }
-            if (currentIsland == null) return;
-            event.setRespawnLocation(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(currentIsland.concat("x")), config.getDouble(currentIsland.concat("y")), config.getDouble(currentIsland.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
-        } else {
-            String base = "islands.".concat(player.getName().toLowerCase()).concat(".home.");
-            event.setRespawnLocation(new Location(Bukkit.getWorld(config.getString("oneblock-world")), config.getDouble(base.concat("x")), config.getDouble(base.concat("y")), config.getDouble(base.concat("z")), (float) config.getDouble("yaw"), (float) config.getDouble("pitch")));
+        String playerNameLowercase = player.getName().toLowerCase(), base = "islands." + playerNameLowercase + ".home.";
+        if (!config.contains("islands." + playerNameLowercase)) {
+            base = getIslandFromLocation(player.getLocation());
+            if (base == null) base = getIslandFromXAndZ(0.0, 0.0);
+            if (base == null) return;
+            base += "spawn.";
         }
+        event.setRespawnLocation(new Location(oneblockWorld, config.getDouble(base + "x"), config.getDouble(base + "y"), config.getDouble(base + "z"), (float) config.getDouble(base + "yaw"), (float) config.getDouble(base + "pitch")));
+    }
+
+    /**
+     * A wrapper function for getIslandFromXAndZ() that takes in a location parameter instead of two Double parameters
+     * 
+     * @param loc The location to check for
+     * @return The base string for the island at that location or null if no island exists there
+     */
+    public String getIslandFromLocation(Location loc) {
+        return getIslandFromXAndZ(loc.getX(), loc.getY());
+    }
+
+    /**
+     * Gets a island from a x and a z value
+     * 
+     * @param x The x value
+     * @param z The z value
+     * @return The base string for the island at that x and z value, or null if no island exists there
+     */
+    public String getIslandFromXAndZ(Double x, Double z) {
+        int islandSpacing = config.getInt("island-spacing"), islandSpacingHalf = islandSpacing/2;
+        for (String island : config.getConfigurationSection("islands").getKeys(false)) {
+            String base = "islands." + island + ".";
+            int islandX = config.getInt(base + "x") * islandSpacing, islandZ = config.getInt(base + "z") * islandSpacing;
+            if (x > islandX - islandSpacingHalf && z > islandZ - islandSpacingHalf && x <= islandX + islandSpacingHalf && z <= islandZ + islandSpacingHalf) return base;
+        }
+        return null;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         // Make sure player has a island
         Player player = (Player) event.getWhoClicked();
-        if (config.getString("islands." + player.getName().toLowerCase() + ".x") == null) {
-            plugin.getCommands().sendInfo(player, "You need a oneblock island to edit this.");
-            return;
-        }
+        if (!plugin.getCommands().hasIsland(player)) return;
 
         // Make sure slot is part of the GUI
         if (event.getClickedInventory() != event.getInventory()) return;
 
         // Find which GUI this is
         String inventoryTitle = event.getInventory().getTitle();
-        // if (inventoryTitle.equals(config.getString("phase-menu.title"))){
-        //     // Cancel all clicks so no items leave the inventory
-        //     event.setCancelled(true);
-
-        //     // Make sure slot isn't a error slot
-        //     int slot = event.getSlot();
-        //     if (slot < 0) return;
-
-        //     // Check for X slot
-        //     if (slot == 0) player.closeInventory();
-
-        //     // Make sure slot is not a border slot
-        //     List<String> phases = config.getStringList("phases");
-        //     int row = (int) Math.ceil((slot+1)/9);
-        //     if (row == (int) (Math.ceil(phases.size() / 7) + 2) || row == 1 || slot % 9 == 1 || slot % 9 == 0) return;
-
-        //     ItemStack currentItemStack = event.getCurrentItem();
-        //     if (currentItemStack.hasItemMeta() && currentItemStack.getItemMeta().hasDisplayName()) {
-        //         // Make sure slot is unlocked
-        //         if (currentItemStack.getItemMeta().getDisplayName().equals("Locked phase")) return;
-
-        //         // Set new phase
-        //         config.set("islands." + player.getName().toLowerCase() + ".phase", currentItemStack.getItemMeta().getDisplayName().toLowerCase());
-        //     }
-        // } else 
         if (inventoryTitle.equals(config.getString("perm-menu.title.visitor")) || inventoryTitle.equals(config.getString("perm-menu.title.trusted"))) {
             // Make sure nothing leaves the inventory
             event.setCancelled(true);
@@ -333,16 +370,25 @@ public final class OneblockListener implements Listener {
         Block broken = event.getBlock();
         Location loc = broken.getLocation();
         int distance = config.getInt("island-spacing");
-        if (loc.getWorld().getName().equals(config.getString("oneblock-world")) && loc.getBlockX() % distance == 0 && loc.getBlockZ() % distance == 0 && loc.getBlockY() == config.getInt("oneblock-y")) {
+        if (loc.getWorld().getName().equals(config.getString("oneblock-world")) && loc.getBlockX() % distance == 0 && loc.getBlockZ() % distance == 0 && loc.getBlockY() == oneblockY) {
             // Cancel the block early to prevent too much lag
             event.setCancelled(true);
 
-            // Update block count
-            // TODO: Make this based on the island and not the player (make a new helper public func from the existing func)
+            // Get player location as a fix for being squished out a block
             Player player = event.getPlayer();
-            String base = "islands.".concat(player.getName().toLowerCase());
-            int blockCount = config.getInt(base.concat(".blocks")) + 1;
-            config.set(base.concat(".blocks"), blockCount);
+            Location originalLoc = player.getLocation();
+            double islandSpacing = config.getDouble("island-spacing"), originalLocX = originalLoc.getX(), originalLocZ = originalLoc.getZ();
+            if (((originalLocX >= 0 && originalLocX % islandSpacing < 1.3) || (originalLocX < 0 && originalLocX % islandSpacing > -0.3))
+            && ((originalLocZ >= 0 && originalLocZ % islandSpacing < 1.3) || (originalLocZ < 0 && originalLocZ % islandSpacing > -0.3))
+            && originalLoc.getBlockY() == oneblockY) originalLoc.setY(oneblockY + 1);
+
+            // Get the island the player is on
+            String base = getIslandFromLocation(originalLoc);
+            if (base == null) return;
+
+            // Update block count
+            int blockCount = config.getInt(base + ".blocks") + 1;
+            config.set(base + ".blocks", blockCount);
 
             // Drop normal drops
             World brokenWorld = broken.getWorld();
@@ -371,17 +417,14 @@ public final class OneblockListener implements Listener {
             player.setExhaustion(player.getExhaustion() + 0.005f);
 
             // Replace the broken block (use starter blocks if starter in section)
-            List<String> starter = config.getStringList("starter");
-            if (starter.size() > blockCount) {
-                String[] parts = starter.get(blockCount).split(":");
-                Material material = Material.getMaterial(parts[0]);
-                if (material == null) {
-                    log.log(Level.WARNING, "Starter block #{0} material name {1} is invalid. Defaulting to grass.", new String[]{Integer.toString(blockCount), parts[0]});
-                    material = Material.GRASS;
+            OneblockCommands commands = plugin.getCommands();
+            if (starterBlocks.size() > blockCount) {
+                if (starterBlocks == null) broken.setTypeIdAndData(Material.GRASS.getId(), (byte) 0, true);
+                else {
+                    NormalBlock block = starterBlocks.get(blockCount);
+                    broken.setTypeIdAndData(block.getId(), block.getData(), true);
                 }
-                broken.setType(material);
-                broken.setData(Byte.parseByte((parts.length > 1) ? parts[1] : "0"));
-            } else replaceBlock(broken, player);
+            } else replaceBlock(commands, base, broken, player);
 
             // Get total blocks needed to be out of the phase updates
             List<Integer> phaseLength = config.getIntegerList("phase-length");
@@ -390,7 +433,6 @@ public final class OneblockListener implements Listener {
 
             // Only update phase if phases have not yet been finished
             if (blockCount < total) {
-                List<String> phases = new ArrayList<>(config.getConfigurationSection("phase-blocks").getKeys(false));
                 String phase = phases.get(phases.size() - 1);
 
                 // Find correct phase
@@ -402,34 +444,39 @@ public final class OneblockListener implements Listener {
                     }
                     total += phaseLength.get(i);
                 }
-                if (!phase.equals(config.getString(base.concat(".phase")))) {
-                    config.set(base.concat(".phase"), phase);
-                    plugin.getCommands().sendInfo(player, ChatColor.GREEN + "New Phase: " + phase + ". Use the command \"/ob count\" to check block count.");
+
+                // Update phase if changed
+                if (!phase.equals(config.getString(base + ".phase"))) {
+                    config.set(base + ".phase", phase);
+                    phase = capitalize(phase);
+                    commands.sendInfo(player, ChatColor.GREEN + "New Phase: " + phase + ". Use the command \"/ob count\" to check block count.");
+                    player.sendTitle(ChatColor.GOLD + "New Phase " + phase, ChatColor.YELLOW + "Use \"/ob count\" for more info.", 10, 100, 20);
                 }
             }
+        
+            // Teleport player to the right location 
+            Location newLocation = player.getLocation();
+            originalLoc.setYaw(newLocation.getYaw());
+            originalLoc.setPitch(newLocation.getPitch());
+            player.teleport(originalLoc);
         }
     }
 
-    // @SuppressWarnings("deprecation")
-    public void replaceBlock(Block replace, Player player) {
-        // Get player location
-        Location originalLoc = player.getLocation();
-        int oneblockY = config.getInt("oneblock-y");
-        double islandSpacing = config.getDouble("island-spacing"), originalLocX = originalLoc.getX(), originalLocZ = originalLoc.getZ();
-        if (((originalLocX >= 0 && originalLocX % islandSpacing < 1.3) || (originalLocX < 0 && originalLocX % islandSpacing > -0.3))
-        && ((originalLocZ >= 0 && originalLocZ % islandSpacing < 1.3) || (originalLocZ < 0 && originalLocZ % islandSpacing > -0.3))
-        && originalLoc.getBlockY() == oneblockY) originalLoc.setY(oneblockY + 1);
+    private String capitalize(String input) {
+        return input.substring(0, 1).toUpperCase() + input.substring(1);
+    }
 
+    // @SuppressWarnings("deprecation")
+    public void replaceBlock(OneblockCommands commands, String base, Block replace, Player player) {
         // Get phase
-        // TODO: Make this based on the island and not the player (make a new helper public func from the existing func)
-        String playerPhase = config.getString("islands." + player.getName().toLowerCase() + ".phase");
-        if (playerPhase == null) {
-            plugin.getCommands().sendInfo(player, ChatColor.RED + "Error fetching your phase / island. Make sure you have a island and contact staff for help. Defaulting to plains phase.");
-            playerPhase = "plains";
+        String islandPhase = config.getString(base + ".phase");
+        if (islandPhase == null) {
+            commands.sendInfo(player, ChatColor.RED + "Error fetching the phase of the island you are on. Make sure you are on a island and contact staff for help. Defaulting to plains phase.");
+            islandPhase = "plains";
         }
 
         // Replace block
-        List<OneblockBlock> phaseList = phaseBlocks.get(playerPhase);
+        List<OneblockBlock> phaseList = phaseBlocks.get(islandPhase);
         OneblockBlock randomizedBlock = phaseList.get((int) (Math.random() * phaseList.size()));
         switch (randomizedBlock.getType()) {
             case CHEST -> {
@@ -449,16 +496,9 @@ public final class OneblockListener implements Listener {
                 for (ItemStack item : chestBlock.getItems()) chestInventory.addItem(item);
             }
             default -> {
-                if (randomizedBlock.getType() != OneblockBlock.Types.BLOCK) log.log(Level.WARNING, "The randomized block's type ({0}) is not CHEST, BLOCK, or LOOT.", randomizedBlock.getType());
-                NormalBlock block = (NormalBlock) randomizedBlock;
-                replace.setTypeIdAndData(block.getId(), block.getData(), true);
+                if (randomizedBlock instanceof NormalBlock block) replace.setTypeIdAndData(block.getId(), block.getData(), true);
+                else log.log(Level.WARNING, "The randomized block's type ({0}) is not CHEST, BLOCK, or LOOT.", randomizedBlock.getType());
             }
         }
-        
-        // Teleport player to the right location
-        Location newLocation = player.getLocation();
-        originalLoc.setYaw(newLocation.getYaw());
-        originalLoc.setPitch(newLocation.getPitch());
-        player.teleport(originalLoc);
     }
 }

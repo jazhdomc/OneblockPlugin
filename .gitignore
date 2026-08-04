@@ -1,9 +1,7 @@
 # MacOS Junk
-*/.DS_Store
-*/._.DS_Store
 ._.DS_Store
 .DS_Store
 
-# Do not include while committing
+# Don't include compiled jar files
 target/
 target/*

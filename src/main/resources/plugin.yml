@@ -1,5 +1,5 @@
 name: OneblockPlugin
-version: 0.2.0
+version: 0.2.1
 description: The plugin used in the oneblock server of JazhdoMC.
 author: jazhdo
 main: mc.jazhdo.OneblockPlugin
