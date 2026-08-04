@@ -248,8 +248,8 @@ public final class OneblockListener implements Listener {
         // Set all the changes to the real blocks list
         this.phaseBlocks = tempPhaseBlocks;
 
-        // Set to null to indicate loading
-        this.starterBlocks = null;
+        // Empty list
+        starterBlocks = new ArrayList<>();
 
         // Parse blocks and add them to the starter list
         List<String> starter = config.getStringList("starter");
