@@ -6,6 +6,141 @@
 # The distance between each island (when subtracted)
 island-spacing: 1000
 
+# Optional Oneblock tiers. Each tier represents a different part of the world.
+# Each tier lasts for its configured length in mined blocks, then advances to the next tier.
+# Omit this section to keep the existing phase-only behavior.
+tier-mob-chance: 0.05
+tiers:
+  plains:
+    length: 300
+    blocks:
+      - GRASS:0
+      - DIRT:0
+      - GRASS_PATH:0
+      - STONE:0
+      - COBBLESTONE:0
+      - LOG:0
+      - LEAVES:0
+      - SAND:0
+      - CLAY:0
+      - PUMPKIN:0
+      - MELON_BLOCK:0
+      - HAY_BLOCK:0
+    mobs:
+      - PIG
+      - CHICKEN
+      - COW
+      - SHEEP
+      - HORSE
+    mob-chance: 0.06
+
+  caves:
+    length: 400
+    blocks:
+      - STONE:0
+      - STONE:1
+      - STONE:3
+      - STONE:5
+      - COBBLESTONE:0
+      - GRAVEL:0
+      - COAL_ORE:0
+      - IRON_ORE:0
+      - GOLD_ORE:0
+      - REDSTONE_ORE:0
+      - LAPIS_ORE:0
+      - EMERALD_ORE:0
+    mobs:
+      - BAT
+      - SPIDER
+      - CAVE_SPIDER
+      - SILVERFISH
+      - ZOMBIE
+    mob-chance: 0.08
+
+  savannah:
+    length: 500
+    blocks:
+      - GRASS:0
+      - DIRT:1
+      - HARD_CLAY:0
+      - STAINED_CLAY:1
+      - STAINED_CLAY:4
+      - STAINED_CLAY:12
+      - ACACIA_STAIRS:0
+      - LOG_2:0
+      - LEAVES_2:0
+      - SAND:0
+      - GRAVEL:0
+      - TORCH:0
+    mobs:
+      - HORSE
+      - LLAMA
+      - RABBIT
+      - PIG
+      - WOLF
+    mob-chance: 0.05
+
+  desert:
+    length: 500
+    blocks:
+      - SAND:0
+      - SANDSTONE:0
+      - SANDSTONE:1
+      - SANDSTONE:2
+      - HARD_CLAY:0
+      - STAINED_CLAY:12
+      - GOLD_ORE:0
+      - CACTUS:0
+      - DEAD_BUSH:0
+      - GRAVEL:0
+      - CHISELED_SANDSTONE:0
+    mobs:
+      - RABBIT
+      - SPIDER
+      - HUSK
+      - SKELETON
+    mob-chance: 0.06
+
+  snowy:
+    length: 600
+    blocks:
+      - SNOW_BLOCK:0
+      - ICE:0
+      - PACKED_ICE:0
+      - STONE:0
+      - COBBLESTONE:0
+      - DIAMOND_ORE:0
+      - LOG:1
+      - LEAVES:1
+      - SPRUCE_WOOD_STAIRS:0
+    mobs:
+      - POLAR_BEAR
+      - WOLF
+      - RABBIT
+      - STRAY
+    mob-chance: 0.04
+
+  ocean:
+    length: 700
+    blocks:
+      - SAND:0
+      - GRAVEL:0
+      - CLAY:0
+      - STONE:0
+      - PRISMARINE:0
+      - PRISMARINE:1
+      - PRISMARINE:2
+      - SEA_LANTERN:0
+      - SPONGE:0
+      - SANDSTONE:0
+    mobs:
+      - SQUID
+      - GUARDIAN
+      - ZOMBIE
+      - SKELETON
+    mob-chance: 0.05
+
+
 # The message displayed when teleporting to someone's oneblock (%p is the playername who's oneblock the teleportation is to)
 oneblock-visit-msg: Teleporting to %p's oneblock...
 

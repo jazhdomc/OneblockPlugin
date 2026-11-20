@@ -95,6 +95,8 @@ public class OneblockCommands implements CommandExecutor {
                         section.set("spawn.yaw", yaw);
                         section.set("spawn.pitch", pitch);
                         section.set("blocks", 0);
+                        section.set("tier-blocks", 0);
+                        section.set("tier", listener.tiers.isEmpty() ? null : listener.tiers.get(0));
                         section.set("phase", listener.phases.get(0));
                         section.set("trusted", new ArrayList<>());
                         section.set("trusted-perms", List.of("player-move", "crafting-use"));
@@ -191,13 +193,30 @@ public class OneblockCommands implements CommandExecutor {
                     }
                     ConfigurationSection section = config.getConfigurationSection(base.substring(0, base.length() - 1));
                     String phase = section.getString("phase"), blockCount = section.getString("blocks");
-                    int phaseIndex = listener.phases.indexOf(phase), blockCountInt = Integer.parseInt(blockCount);
+                    int blockCountInt = Integer.parseInt(blockCount);
+                    String tierMessage = "";
+                    if (!listener.tiers.isEmpty()) {
+                        String tier = section.getString("tier");
+                        if (tier == null) tier = listener.tiers.get(0);
+                        int tierIndex = listener.tiers.indexOf(tier);
+                        int tierProgress = section.getInt("tier-blocks");
+                        int tierLength = config.getInt("tiers." + tier + ".length");
+                        tierMessage = "\nCurrent Tier (" + (tierIndex + 1) + "/" + listener.tiers.size() + "): " + tier
+                            + "\nTier Blocks: " + tierProgress + "/" + tierLength;
+                    }
+                    int phaseIndex = listener.phases.indexOf(phase);
+                    if (phaseIndex < 0) phaseIndex = 0;
                     List<Integer> phaseLength = config.getIntegerList("phase-length");
+                    String untilNextPhase = "Phase complete";
+                    if (phaseIndex + 1 < listener.phases.size()) {
+                        int required = phaseLength.size() > phaseIndex + 1 ? phaseLength.get(phaseIndex + 1) : 0;
+                        untilNextPhase = listener.phases.get(phaseIndex + 1) + " (" + Integer.toString(Math.max(0, required - blockCountInt)) + " blocks)";
+                    }
                     sendInfo(player,
-                        "Blocks Since Last Phase (" + (phaseIndex == 0 ? "none" : listener.phases.get(phaseIndex - 1)) + "): " + Integer.toString(blockCountInt - (phaseIndex == 0 ? 0 : phaseLength.get(phaseIndex - 1)))
-                        + "\nCurrent Phase (" + Integer.toString(phaseIndex + 1) + "/" + Integer.toString(listener.phases.size()) + "): " + phase
+                        "Current Phase (" + Integer.toString(phaseIndex + 1) + "/" + Integer.toString(listener.phases.size()) + "): " + phase
                         + "\nBlock Count: " + blockCount
-                        + "\nBlocks Until Next Phase (" + listener.phases.get(phaseIndex + 1) + "): " + Integer.toString(phaseLength.get(phaseIndex + 1) - blockCountInt)
+                        + "\nNext Phase: " + untilNextPhase
+                        + tierMessage
                     );
                 }
             }

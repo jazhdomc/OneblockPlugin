@@ -19,6 +19,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -39,6 +40,8 @@ public final class OneblockListener implements Listener {
     public World oneblockWorld;
     public int oneblockY;
     public List<String> phases = new ArrayList<>();
+    public List<String> tiers = new ArrayList<>();
+    private Map<String, List<OneblockBlock>> tierBlocks = new HashMap<>();
 
     public OneblockListener(OneblockPlugin plugin) {
         this.plugin = plugin;
@@ -248,6 +251,35 @@ public final class OneblockListener implements Listener {
         // Set all the changes to the real blocks list
         this.phaseBlocks = tempPhaseBlocks;
 
+        // Load tier block pools. Tiers are optional so existing configs keep working.
+        tiers = new ArrayList<>();
+        tierBlocks = new HashMap<>();
+        if (config.contains("tiers")) {
+            ConfigurationSection tiersConfig = config.getConfigurationSection("tiers");
+            for (String tier : tiersConfig.getKeys(false)) {
+                tiers.add(tier);
+                List<OneblockBlock> blockList = new ArrayList<>();
+                for (String block : tiersConfig.getStringList(tier + ".blocks")) {
+                    String[] parts = block.split(":");
+                    Material material = Material.getMaterial(parts[0].toUpperCase());
+                    if (material == null || !material.isBlock()) {
+                        log.log(Level.WARNING, "Tier {0} block Material.{1} is invalid. Defaulting to grass.", new String[]{tier, parts[0]});
+                        material = Material.GRASS;
+                    }
+                    byte data = 0;
+                    if (parts.length > 1) {
+                        try {
+                            data = Byte.parseByte(parts[1]);
+                        } catch (NumberFormatException e) {
+                            log.log(Level.WARNING, "Tier {0} block {1} has invalid data. Defaulting to 0.", new String[]{tier, block});
+                        }
+                    }
+                    blockList.add(new NormalBlock(material.getId(), data));
+                }
+                if (!blockList.isEmpty()) tierBlocks.put(tier, blockList);
+            }
+        }
+
         // Empty list
         starterBlocks = new ArrayList<>();
 
@@ -390,6 +422,29 @@ public final class OneblockListener implements Listener {
             int blockCount = config.getInt(base + ".blocks") + 1;
             config.set(base + ".blocks", blockCount);
 
+            // Advance configured tiers independently of biome phases.
+            if (!tiers.isEmpty()) {
+                String tier = config.getString(base + ".tier");
+                if (tier == null || !tiers.contains(tier)) {
+                    tier = tiers.get(0);
+                    config.set(base + ".tier", tier);
+                    config.set(base + ".tier-blocks", 0);
+                }
+
+                int tierIndex = tiers.indexOf(tier);
+                int tierLength = config.getInt("tiers." + tier + ".length");
+                int tierBlocks = config.getInt(base + ".tier-blocks") + 1;
+
+                if (tierIndex + 1 < tiers.size() && tierLength > 0 && tierBlocks >= tierLength) {
+                    String nextTier = tiers.get(tierIndex + 1);
+                    config.set(base + ".tier", nextTier);
+                    config.set(base + ".tier-blocks", 0);
+                    commandsTierAnnouncement(plugin.getCommands(), player, nextTier);
+                } else {
+                    config.set(base + ".tier-blocks", tierBlocks);
+                }
+            }
+
             // Drop normal drops
             World brokenWorld = broken.getWorld();
             Location dropLocation = loc.clone().add(0.5, 1.2, 0.5);
@@ -425,6 +480,8 @@ public final class OneblockListener implements Listener {
                     broken.setTypeIdAndData(block.getId(), block.getData(), true);
                 }
             } else replaceBlock(commands, base, broken, player);
+
+            spawnTierMob(base, dropLocation);
 
             // Get total blocks needed to be out of the phase updates
             List<Integer> phaseLength = config.getIntegerList("phase-length");
@@ -466,6 +523,35 @@ public final class OneblockListener implements Listener {
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 
+    private void spawnTierMob(String base, Location spawnLocation) {
+        if (tiers.isEmpty()) return;
+
+        String tier = config.getString(base + ".tier");
+        if (tier == null || !tiers.contains(tier)) tier = tiers.get(0);
+
+        double chance = config.getDouble("tiers." + tier + ".mob-chance", config.getDouble("tier-mob-chance", 0.05));
+        chance = Math.max(0, Math.min(1, chance));
+        if (chance <= 0 || Math.random() >= chance) return;
+
+        List<String> mobNames = config.getStringList("tiers." + tier + ".mobs");
+        if (mobNames.isEmpty()) return;
+
+        String mobName = mobNames.get((int) (Math.random() * mobNames.size())).toUpperCase();
+        try {
+            EntityType entityType = EntityType.valueOf(mobName);
+            if (!entityType.isSpawnable()) return;
+            spawnLocation.getWorld().spawnEntity(spawnLocation, entityType);
+        } catch (IllegalArgumentException e) {
+            log.log(Level.WARNING, "Tier {0} mob {1} is invalid and was skipped.", new String[]{tier, mobName});
+        }
+    }
+
+    private void commandsTierAnnouncement(OneblockCommands commands, Player player, String tier) {
+        String displayName = capitalize(tier);
+        commands.sendInfo(player, ChatColor.GREEN + "New Tier: " + displayName + ". Use /ob count for tier progress.");
+        player.sendTitle(ChatColor.GOLD + "New Tier " + displayName, ChatColor.YELLOW + "The Oneblock grows stronger!", 10, 100, 20);
+    }
+
     // @SuppressWarnings("deprecation")
     public void replaceBlock(OneblockCommands commands, String base, Block replace, Player player) {
         // Get phase
@@ -475,8 +561,16 @@ public final class OneblockListener implements Listener {
             islandPhase = "plains";
         }
 
-        // Replace block
-        List<OneblockBlock> phaseList = phaseBlocks.get(islandPhase);
+        // Replace block. Configured tiers take precedence over the regular phase pool.
+        String tier = config.getString(base + ".tier");
+        List<OneblockBlock> phaseList = (tier != null && tierBlocks.containsKey(tier))
+            ? tierBlocks.get(tier)
+            : phaseBlocks.get(islandPhase);
+        if (phaseList == null || phaseList.isEmpty()) {
+            commands.sendInfo(player, ChatColor.RED + "No blocks are configured for tier/phase " + islandPhase + ". Defaulting to grass.");
+            replace.setType(Material.GRASS);
+            return;
+        }
         OneblockBlock randomizedBlock = phaseList.get((int) (Math.random() * phaseList.size()));
         switch (randomizedBlock.getType()) {
             case CHEST -> {
